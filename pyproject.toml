@@ -17,7 +17,7 @@ dependencies = [
     "lightgbm>=4.0.0",
     "torch>=2.1.0",
     # Utilities
-    "shap>=0.42.0",
+    "shap>=0.48.0",
     "python-dotenv>=1.0.0",
     "loguru>=0.7.0",
     # Core dependencies
