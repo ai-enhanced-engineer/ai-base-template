@@ -1,17 +1,28 @@
 # AI Base Template
 
-A modern Python template for ML/AI projects with FastAPI, designed for rapid prototyping with production-ready architecture.
+A minimal Python template for AI/ML projects with modern tooling, designed to help you start projects faster with best practices built-in.
+
+## What is this?
+
+This is a simple, clean Python project template that comes pre-configured with:
+- Modern Python development tools
+- ML/Data science libraries
+- Testing infrastructure
+- Code quality automation
+- Clean project structure
+
+Perfect for starting new AI/ML experiments, research projects, or proof-of-concepts without setting up all the tooling from scratch.
 
 ## Features
 
-- 🚀 **FastAPI** for high-performance REST APIs
-- 🧪 **Full testing setup** with pytest (unit, functional, integration)
-- 🔧 **Modern tooling** with uv, Ruff, and MyPy
-- 📊 **ML-ready** with scikit-learn, XGBoost, PyTorch pre-configured
-- 🐳 **Docker-ready** architecture
-- 📝 **Type-safe** with Pydantic models and strict MyPy checking
-- 🔍 **Observable** with structured logging via loguru
-- ⚡ **Fast development** with Make commands for common tasks
+- 🐍 **Python 3.12** with modern packaging via uv
+- 🧪 **Testing setup** with pytest (unit, functional, integration markers)
+- 🔧 **Code quality** with Ruff (formatting + linting) and MyPy (type checking)
+- 📊 **ML-ready** with pre-configured data science libraries
+- 📝 **Type hints** and Pydantic for data validation
+- 🔍 **Logging** with loguru for better debugging
+- ⚡ **Make commands** for common development tasks
+- 📓 **Jupyter** support for experimentation
 
 ## Quick Start
 
@@ -21,10 +32,10 @@ A modern Python template for ML/AI projects with FastAPI, designed for rapid pro
 
 ### Setup
 
-1. Clone this template:
+1. Clone or use this template:
 ```bash
-git clone <repository-url>
-cd ai-base-template
+git clone <repository-url> my-ai-project
+cd my-ai-project
 ```
 
 2. Create environment and install dependencies:
@@ -32,45 +43,46 @@ cd ai-base-template
 make environment-create
 ```
 
-3. Run the development server:
-```bash
-uvicorn ai_base_template.main:app --reload
-```
+3. Start coding! Your code goes in `ai_base_template/`
 
-4. Visit http://localhost:8000/docs for the interactive API documentation
+4. Run tests to make sure everything works:
+```bash
+make unit-test
+```
 
 ## Project Structure
 
 ```
 ai-base-template/
-├── ai_base_template/      # Main application code
-│   ├── __init__.py
-│   └── main.py           # FastAPI application
-├── tests/                # Test suite
+├── ai_base_template/      # Your Python package
+│   ├── __init__.py       # Package initialization
+│   └── main.py           # Example module
+├── tests/                # Test files
 │   └── test_main.py      # Example tests
 ├── research/             # Notebooks and experiments
 │   └── EDA.ipynb        # Exploratory data analysis
-├── testing/              # API testing utilities
-├── Makefile             # Development automation
-├── pyproject.toml       # Project dependencies
+├── testing/              # Test utilities and scripts
+├── Makefile             # Development commands
+├── pyproject.toml       # Project configuration
 ├── CLAUDE.md            # Development guide
+├── .gitignore           # Git ignore rules
 └── README.md            # This file
 ```
 
 ## Development Workflow
 
-### Common Commands
+### Essential Commands
 
 ```bash
-# Environment management
-make environment-create   # Initial setup
-make environment-sync     # Update dependencies
+# Environment
+make environment-create   # First-time setup
+make environment-sync     # Update after changing dependencies
 
-# Code quality
+# Code Quality
 make format              # Auto-format code
-make lint               # Lint and fix issues
-make type-check         # Run type checking
-make validate-branch    # Run all checks
+make lint               # Fix linting issues
+make type-check         # Check types
+make validate-branch    # Run all checks (before committing)
 
 # Testing
 make unit-test          # Run unit tests
@@ -78,87 +90,99 @@ make functional-test    # Run functional tests
 make all-test          # Run all tests with coverage
 ```
 
-### Writing Code
+### Adding Code
 
-1. Add your code to `ai_base_template/`
-2. Write tests in `tests/`
-3. Use `make validate-branch` before committing
-4. Follow the conventions in CLAUDE.md
+1. Add your modules to `ai_base_template/`
+2. Write corresponding tests in `tests/`
+3. Use type hints for better code quality
+4. Run `make validate-branch` before committing
 
-## Technology Stack
-
-### Core
-- **FastAPI** - Modern web framework
-- **Pydantic** - Data validation
-- **uvicorn** - ASGI server
+## Pre-installed Libraries
 
 ### ML/Data Science
-- **scikit-learn** - Classical ML
-- **XGBoost/LightGBM** - Gradient boosting
+- **numpy** - Numerical computing
+- **pandas** - Data manipulation
+- **scikit-learn** - Classical ML algorithms
+- **XGBoost** - Gradient boosting
+- **LightGBM** - Fast gradient boosting
 - **PyTorch** - Deep learning
-- **pandas/numpy** - Data manipulation
-- **SHAP** - Model interpretability
+- **SHAP** - Model explainability
 
-### Development
-- **uv** - Fast package manager
-- **Ruff** - Linter and formatter
-- **MyPy** - Static type checker
+### Development Tools
 - **pytest** - Testing framework
+- **ruff** - Fast Python linter/formatter
+- **mypy** - Static type checker
 - **pre-commit** - Git hooks
+- **loguru** - Better logging
+- **python-dotenv** - Environment variables
+- **jupyter** - Interactive notebooks
 
 ## Configuration
 
-Configuration is handled through environment variables and Pydantic settings. Create a `.env` file for local development:
+Use environment variables for configuration. Create a `.env` file in the project root:
 
 ```env
-# Example .env file
-API_KEY=your-api-key
-MODEL_PATH=./models
+# Example .env
 LOG_LEVEL=DEBUG
+DATA_PATH=./data
+MODEL_PATH=./models
+RANDOM_SEED=42
 ```
 
-## Testing
+Load them in your code:
+```python
+from dotenv import load_dotenv
+load_dotenv()
+```
 
-The template includes a comprehensive testing setup:
+## Testing Strategy
 
-- **Unit tests**: Test individual components
-- **Functional tests**: Test complete workflows
-- **Integration tests**: Test with external dependencies
+The template includes three test levels:
 
-Run tests with coverage:
+```python
+@pytest.mark.unit        # Fast, isolated tests
+@pytest.mark.functional  # Feature/workflow tests
+@pytest.mark.integration # Tests with external dependencies
+```
+
+Run specific test types:
 ```bash
-make all-test
+make unit-test
+make functional-test
+make integration-test
 ```
 
-## Best Practices
+## Starting Your Project
 
-- ✅ Type hints on all functions
-- ✅ Pydantic models for validation
-- ✅ Structured logging
-- ✅ Environment-based config
-- ✅ No hardcoded secrets
-- ✅ >80% test coverage
-- ✅ Pre-commit hooks
+1. **Rename the package**: Change `ai_base_template` to your project name
+2. **Update pyproject.toml**: Set your project name, version, and description
+3. **Clean up examples**: Remove the example code in `main.py`
+4. **Start building**: Add your own modules and logic
+5. **Document as you go**: Update this README with your project specifics
 
-## Contributing
+## Best Practices Included
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run `make validate-branch`
-5. Submit a pull request
+- ✅ Modern Python packaging with uv
+- ✅ Comprehensive .gitignore
+- ✅ Pre-configured linting and formatting
+- ✅ Type checking setup
+- ✅ Test structure with markers
+- ✅ Makefile automation
+- ✅ Clean project layout
+- ✅ Development guide (CLAUDE.md)
+
+## Tips
+
+- Use `make validate-branch` before every commit
+- Keep dependencies in `pyproject.toml`
+- Write tests as you code
+- Use type hints everywhere
+- Check CLAUDE.md for detailed guidelines
 
 ## License
 
 [Your License Here]
 
-## Support
-
-For issues and questions:
-- Check the [CLAUDE.md](./CLAUDE.md) development guide
-- Open an issue on GitHub
-- Review the example code in `ai_base_template/`
-
 ---
 
-Built with ❤️ for modern ML/AI development
+Built to help you start AI/ML projects faster 🚀
