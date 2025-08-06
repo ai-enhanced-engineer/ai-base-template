@@ -4,6 +4,7 @@ version = "0.0.1"
 description = "AI Base Template - Python service with AI capabilities"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
 dependencies = [
     # API framework
     "fastapi>=0.95.0",
