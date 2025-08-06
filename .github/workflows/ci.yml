@@ -39,10 +39,37 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv venv --python 3.12
+          make environment-sync
       
       - name: Run linters
-        run: uv run ruff check .
+        run: make lint
+
+  type-check:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            *.py
+      
+      - name: Set up Python
+        run: uv python install 3.12
+      
+      - name: Install dependencies
+        run: |
+          uv venv --python 3.12
+          make environment-sync
+      
+      - name: Run type checks
+        run: make type-check
 
   test:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action != 'closed')
@@ -62,10 +89,12 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv venv --python 3.12
+          make environment-sync
       
       - name: Run tests
-        run: uv run pytest
+        run: make unit-test
 
   merged-test:
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
@@ -88,13 +117,15 @@ jobs:
         run: uv python install 3.12
       
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv venv --python 3.12
+          make environment-sync
       
       - name: Run tests
-        run: uv run pytest
+        run: make unit-test
 
   release:
-    needs: [lint, test]
+    needs: [lint, type-check, test]
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     permissions:
@@ -118,7 +149,8 @@ jobs:
       
       - name: Install dependencies
         run: |
-          uv sync --all-extras --dev
+          uv venv --python 3.12
+          make environment-sync
           uv pip install python-semantic-release
       
       - name: Configure Git

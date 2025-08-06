@@ -214,7 +214,6 @@ uv.lock
 .ruff_cache/
 
 # Pre-commit
-.pre-commit-config.yaml
 
 # Temporary files
 *.tmp

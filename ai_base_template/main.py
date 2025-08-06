@@ -1,4 +1,4 @@
-"""Main module for AI Base Template service"""
+"""Main module for AI Base Template service."""
 
 
 def hello_world() -> str:
