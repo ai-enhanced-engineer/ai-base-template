@@ -65,6 +65,7 @@ ai-base-template/
 ├── Makefile             # Development commands
 ├── pyproject.toml       # Project configuration
 ├── CLAUDE.md            # Development guide
+├── ADR.md               # Architecture Decision Record
 ├── .gitignore           # Git ignore rules
 └── README.md            # This file
 ```
