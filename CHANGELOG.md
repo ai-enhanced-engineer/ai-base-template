@@ -2,6 +2,27 @@
 
 <!-- version list -->
 
+## v0.2.1 (2025-08-21)
+
+### Bug Fixes
+
+- Add sync target and update CI workflows
+  ([#3](https://github.com/ai-enhanced-engineer/ai-base-template/pull/3),
+  [`95cb140`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/95cb140b7bc7f2a619bbe0731b96129ccf42a122))
+
+### Chores
+
+- Improve Makefile interface and consistency
+  ([#3](https://github.com/ai-enhanced-engineer/ai-base-template/pull/3),
+  [`95cb140`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/95cb140b7bc7f2a619bbe0731b96129ccf42a122))
+
+### Refactoring
+
+- Improve Makefile with better naming and consistency
+  ([#3](https://github.com/ai-enhanced-engineer/ai-base-template/pull/3),
+  [`95cb140`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/95cb140b7bc7f2a619bbe0731b96129ccf42a122))
+
+
 ## v0.2.0 (2025-08-06)
 
 ### Chores
