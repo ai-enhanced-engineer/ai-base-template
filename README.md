@@ -47,7 +47,7 @@ make environment-create
 
 4. Run tests to make sure everything works:
 ```bash
-make unit-test
+make test
 ```
 
 ## Project Structure
@@ -86,9 +86,9 @@ make type-check         # Check types
 make validate-branch    # Run all checks (before committing)
 
 # Testing
-make unit-test          # Run unit tests
-make functional-test    # Run functional tests
-make all-test          # Run all tests with coverage
+make test          # Run unit tests
+make test-functional    # Run functional tests
+make test          # Run all tests with coverage
 ```
 
 ### Adding Code
@@ -148,9 +148,9 @@ The template includes three test levels:
 
 Run specific test types:
 ```bash
-make unit-test
-make functional-test
-make integration-test
+make test
+make test-functional
+make test-integration
 ```
 
 ## Starting Your Project

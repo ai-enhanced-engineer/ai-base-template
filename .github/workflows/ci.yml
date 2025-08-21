@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.12
-          make environment-sync
+          make sync
       
       - name: Run linters
         run: make lint
@@ -66,7 +66,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.12
-          make environment-sync
+          make sync
       
       - name: Run type checks
         run: make type-check
@@ -91,10 +91,10 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.12
-          make environment-sync
+          make sync
       
       - name: Run tests
-        run: make unit-test
+        run: make test-unit
 
   merged-test:
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
@@ -119,10 +119,10 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.12
-          make environment-sync
+          make sync
       
       - name: Run tests
-        run: make unit-test
+        run: make test-unit
 
   release:
     needs: [lint, type-check, test]
@@ -150,7 +150,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.12
-          make environment-sync
+          make sync
           uv pip install python-semantic-release
       
       - name: Configure Git
