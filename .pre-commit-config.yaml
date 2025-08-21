@@ -17,7 +17,7 @@ repos:
         pass_filenames: false
       - id: unit-tests
         name: Run unit tests
-        entry: make unit-test
+        entry: make test-unit
         language: system
         stages: [pre-commit]
         verbose: true

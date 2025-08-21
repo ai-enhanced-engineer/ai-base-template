@@ -36,9 +36,10 @@ make validate-branch     # Run all checks before PR
 
 ### Testing
 ```bash
-make unit-test           # Run unit tests
-make functional-test     # Run functional tests
-make all-test           # Run all tests with coverage
+make test-unit           # Run unit tests
+make test-functional     # Run functional tests
+make test               # Run standard tests with coverage
+make test-all           # Run all tests with coverage
 ```
 
 ## Development Workflow

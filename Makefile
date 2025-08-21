@@ -1,4 +1,4 @@
-.PHONY: default help clean-project environment-create environment-sync environment-delete environment-list sync-env format lint type-check unit-test functional-test integration-test all-test validate-branch validate-branch-strict test-validate-branch all-test-validate-branch local-run build-engine auth-gcloud
+.PHONY: default help clean-project init clean-env format lint type-check test test-unit test-functional test-integration test-all validate-branch
 
 GREEN_LINE=@echo "\033[0;32m--------------------------------------------------\033[0m"
 
@@ -6,7 +6,6 @@ SOURCE_DIR = ai_base_template/
 TEST_DIR = tests/
 PROJECT_VERSION := $(shell awk '/^\[project\]/ {flag=1; next} /^\[/{flag=0} flag && /^version/ {gsub(/"/, "", $$2); print $$2}' pyproject.toml)
 PYTHON_VERSION := 3.12
-CLIENT_ID = leogv
 
 default: help
 
@@ -17,41 +16,38 @@ help: ## Display this help message
 # Environment Management
 # ----------------------------
 
+init: ## Set up Python version, venv, and install dependencies
+	@echo "🔧 Installing uv if missing..."
+	@if ! command -v uv >/dev/null 2>&1; then \
+		echo "📦 Installing uv..."; \
+		python3 -m pip install --user --upgrade uv; \
+	else \
+		echo "✅ uv is already installed"; \
+	fi
+	@echo "🐍 Setting up Python $(PYTHON_VERSION) environment..."
+	uv python install $(PYTHON_VERSION)
+	uv venv --python $(PYTHON_VERSION) .venv
+	@echo "📦 Installing project dependencies..."
+	uv sync --extra dev
+	. .venv/bin/activate && uv pip install -e .
+	@echo "🔗 Setting up pre-commit hooks..."
+	@if [ -f .pre-commit-config.yaml ]; then \
+		uv run pre-commit install; \
+		echo "✅ Pre-commit hooks installed"; \
+	else \
+		echo "⚠️  No .pre-commit-config.yaml found, skipping pre-commit setup"; \
+	fi
+	@echo "🎉 Environment setup complete!"
+
 clean-project: ## Clean Python caches and tooling artifacts
 	@echo "Cleaning project caches..."
 	find . -type d \( -name '.pytest_cache' -o -name '.ruff_cache' -o -name '.mypy_cache' -o -name '__pycache__' \) -exec rm -rf {} +
 	$(GREEN_LINE)
 
-environment-create: ## Set up Python version, venv, and install dependencies
-	@echo "Installing uv and pre-commit if missing..."
-	@if ! command -v uv >/dev/null 2>&1; then \
-		python3 -m pip install --user --upgrade uv; \
-	fi
-	@echo "Setting up Python $(PYTHON_VERSION) environment..."
-	uv python install $(PYTHON_VERSION)
-	uv venv --python $(PYTHON_VERSION)
-	. .venv/bin/activate && uv sync --extra dev
-	. .venv/bin/activate && uv pip install -e '.[dev]'
-	. .venv/bin/activate && uv pip install pre-commit
-	. .venv/bin/activate && uv run pre-commit install
-	$(GREEN_LINE)
-
-environment-sync: ## Re-sync project dependencies using uv
-	@echo "Syncing up environment..."
-	. .venv/bin/activate && uv sync --extra dev
-	. .venv/bin/activate && uv pip install -e '.[dev]'
-	$(GREEN_LINE)
-
-sync-env: environment-sync ## Alias for environment-sync
-
-environment-delete: ## Remove the virtual environment folder
+clean-env: ## Remove the virtual environment folder
 	@echo "Deleting virtual environment..."
 	rm -rf .venv
 	$(GREEN_LINE)
-
-environment-list: ## List installed packages
-	@echo "Listing packages in environment..."
-	. .venv/bin/activate && uv pip list
 
 # ----------------------------
 # Code Quality
@@ -76,56 +72,48 @@ type-check: ## Perform static type checks using mypy
 # Tests
 # ----------------------------
 
-unit-test: ## Run unit tests with pytest
+test-unit: ## Run unit tests with pytest
 	@echo "Running UNIT tests with pytest..."
 	uv run python -m pytest -vv --verbose -s $(TEST_DIR)
+	$(GREEN_LINE)
 
-functional-test: ## Run functional tests with pytest
+test-functional: ## Run functional tests with pytest
 	@echo "Running FUNCTIONAL tests with pytest..."
 	uv run python -m pytest -m functional -vv --verbose -s $(TEST_DIR)
+	$(GREEN_LINE)
 
-integration-test: ## Run integration tests with pytest
+test-integration: ## Run integration tests with pytest
 	@echo "Running INTEGRATION tests with pytest..."
 	uv run python -m pytest -m integration -vv --verbose -s $(TEST_DIR)
+	$(GREEN_LINE)
 
-all-test: ## Run all tests with coverage report
-	@echo "Running ALL tests with pytest..."
+test: ## Run standard tests with coverage report (excludes integration)
+	@echo "Running tests with pytest..."
 	uv run python -m pytest -m "not integration" -vv -s $(TEST_DIR) \
 		--cov=ai_base_template \
 		--cov-config=pyproject.toml \
 		--cov-fail-under=80 \
 		--cov-report=term-missing
+	$(GREEN_LINE)
+
+test-all: ## Run all tests including integration tests
+	@echo "Running ALL tests with pytest..."
+	uv run python -m pytest -vv -s $(TEST_DIR) \
+		--cov=ai_base_template \
+		--cov-config=pyproject.toml \
+		--cov-fail-under=80 \
+		--cov-report=term-missing
+	$(GREEN_LINE)
 
 # ----------------------------
 # Branch Validation
 # ----------------------------
 
-validate-branch: ## Run formatting, linting, and tests (equivalent to old behavior)
-	@echo "🔍 Running validation checks..."
-	@echo "📝 Running linting..."
-	uv run ruff check .
-	@echo "✅ Linting passed!"
-	@echo "🧪 Running tests..."
-	uv run python -m pytest
-	@echo "✅ All tests passed!"
-	@echo "🎉 Branch validation successful - ready for PR!"
-
-validate-branch-strict: ## Run formatting, linting, type checks, and tests
-	$(MAKE) sync-env
-	$(MAKE) format
+validate-branch: ## Run linting, type checks, and tests
+	@echo "🔍 Running branch validation..."
 	$(MAKE) lint
 	$(MAKE) type-check
+	$(MAKE) test
+	@echo "🎉 Branch validation successful - ready for PR!"
+	$(GREEN_LINE)
 
-test-validate-branch: ## Validate branch and run unit tests
-	$(MAKE) validate-branch
-	$(MAKE) unit-test
-	$(MAKE) clean-project
-
-all-test-validate-branch: ## Validate branch and run all tests
-	$(MAKE) validate-branch
-	$(MAKE) all-test
-	$(MAKE) clean-project
-
-# ----------------------------
-# Local Development
-# ----------------------------
