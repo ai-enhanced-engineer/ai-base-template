@@ -1,4 +1,4 @@
-.PHONY: default help clean-project init clean-env format lint type-check test test-unit test-functional test-integration test-all validate-branch
+.PHONY: default help clean-project init clean-env sync format lint type-check test test-unit test-functional test-integration test-all validate-branch
 
 GREEN_LINE=@echo "\033[0;32m--------------------------------------------------\033[0m"
 
@@ -47,6 +47,11 @@ clean-project: ## Clean Python caches and tooling artifacts
 clean-env: ## Remove the virtual environment folder
 	@echo "Deleting virtual environment..."
 	rm -rf .venv
+	$(GREEN_LINE)
+
+sync: ## Sync project dependencies
+	@echo "Syncing project dependencies..."
+	uv sync --extra dev
 	$(GREEN_LINE)
 
 # ----------------------------
