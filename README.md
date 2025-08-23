@@ -2,7 +2,7 @@
 
 > Based on [A Production-First Approach to AI Engineering](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai) - a methodology for building reliable AI systems.
 
-## 🎯 Why This Template Exists
+## 🎯 Why This Template?
 
 **The Problem:** Most AI projects fail when moving from prototype to production. Research notebooks that work brilliantly in development fail catastrophically under real-world conditions—latency spikes, cost spirals, non-deterministic failures, and maintenance nightmares.
 
@@ -102,24 +102,6 @@ ai-base-template/
 ├── pyproject.toml       # Modern Python configuration
 └── CLAUDE.md            # Detailed development guide
 ```
-
-### Development Best Practices
-
-1. **Type Everything** - Use type hints to catch errors before runtime
-2. **Test Defensively** - Assume inputs will be malicious or malformed
-3. **Validate Early** - Check your assumptions at system boundaries
-4. **Fail Gracefully** - Always have a fallback plan
-5. **Measure Everything** - You can't improve what you don't measure
-
-## 📊 Why Infrastructure Matters
-
-### Common Production Failures This Template Helps Prevent
-
-**Model Drift** → Solution: Structured monitoring and versioning patterns  
-**Cost Spirals** → Solution: Resource limits and budget tracking hooks  
-**Latency Spikes** → Solution: Async patterns and timeout management  
-**Data Quality Issues** → Solution: Input validation and sanitization patterns  
-**Deployment Failures** → Solution: Comprehensive testing and CI/CD automation
 
 ## 🎓 Who Should Use This Template
 
