@@ -8,7 +8,6 @@ logger = get_logger(__name__)
 
 
 def hello_world() -> str:
-    """Simple function to test the package."""
     logger.info("hello_world function called")
     result = "Hello from AI Base Template!"
     logger.info("hello_world function returning result", result=result)
@@ -16,7 +15,6 @@ def hello_world() -> str:
 
 
 def get_version() -> str:
-    """Get the package version."""
     logger.info("get_version function called")
     from . import __version__
 
