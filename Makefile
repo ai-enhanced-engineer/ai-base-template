@@ -116,8 +116,9 @@ test-all: ## Run all tests including integration tests
 # Branch Validation
 # ----------------------------
 
-validate-branch: ## Run linting, type checks, and tests
+validate-branch: ## Run formatting, linting, type checks, and tests
 	@echo "🔍 Running branch validation..."
+	$(MAKE) format
 	$(MAKE) lint
 	$(MAKE) type-check
 	$(MAKE) test

@@ -30,8 +30,9 @@ def test_package_functionality():
     """Functional test for basic package functionality."""
     # Test that we can import and use the package
     from ai_base_template import __version__
+
     assert __version__ == "1.0.6"
-    
+
     # Test main functions work
     assert hello_world() == "Hello from AI Base Template!"
     assert get_version() == "1.0.6"
