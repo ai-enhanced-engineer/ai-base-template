@@ -15,9 +15,10 @@
 A **modern Python foundation** designed for AI systems that need to work reliably in production:
 
 - **Modern Python Tooling** - Python 3.12+, FastAPI, Pydantic, type hints throughout
+- **Production Logging** - Structured JSON logging with correlation tracking and dual-mode rendering
 - **Development Automation** - Pre-configured linting, formatting, testing, and validation
 - **Production-Ready Structure** - Organized for maintainability and scaling
-- **Comprehensive Testing** - Unit, functional, and integration test patterns
+- **Comprehensive Testing** - Unit, functional, and integration test patterns (21+ logging tests included)
 - **CI/CD Ready** - GitHub Actions, pre-commit hooks, semantic versioning
 - **Documentation Standards** - Clear guides for development and deployment
 
@@ -93,9 +94,11 @@ make test-all          # Complete test suite
 ai-base-template/
 ├── ai_base_template/      # Your service code goes here
 │   ├── __init__.py       
-│   └── main.py           # Simple starting point
+│   ├── main.py           # Simple starting point with logging integration
+│   └── logging.py        # Production structured logging system
 ├── tests/                # Comprehensive test suite
-│   └── test_main.py      # Example test patterns
+│   ├── test_main.py      # Example test patterns
+│   └── test_logging.py   # 21+ logging system tests
 ├── research/             # Notebooks and experiments
 │   └── EDA.ipynb        # Exploratory work stays here
 ├── Makefile             # All automation commands
@@ -114,6 +117,67 @@ Stop reinventing infrastructure. Focus on your models while using battle-tested 
 ### Technical Leaders
 Give your team a consistent, production-ready starting point that embodies engineering best practices from day one.
 
+## 📊 Production Logging System
+
+This template includes a **production-grade structured logging system** built with structlog that handles the observability requirements of real-world AI systems.
+
+### Dual-Mode Logging
+
+**Development Mode** - Human-readable format for debugging:
+```bash
+22:45:00 [INFO] main: Processing request [HTTP 200, 150ms, user_id=user-123] [id:req-abc12]
+```
+
+**Production Mode** - Structured JSON for monitoring systems:
+```json
+{
+  "timestamp": "2025-08-31T22:45:00.123Z",
+  "level": "info", 
+  "logger": "main",
+  "message": "Processing request",
+  "context": "default",
+  "extra": {
+    "status_code": 200,
+    "duration_ms": 150,
+    "user_id": "user-123",
+    "correlation_id": "req-abc-123"
+  }
+}
+```
+
+### Built-in Features
+
+- **Correlation ID Tracking** - Trace requests across your entire system
+- **Context Isolation** - Prevent data leakage between concurrent requests
+- **Smart Field Organization** - Important fields (status_code, duration_ms) formatted for readability
+- **Environment-Driven Configuration** - `LOGGING_LEVEL` and `LITELLM_LOG_LEVEL` support
+- **Logger Name Abbreviation** - Clean, readable logger names in development
+
+### Usage Example
+
+```python
+from ai_base_template.logging import configure_structlog, get_logger, bind_contextvars
+
+# Configure for your environment
+configure_structlog(testing=False)  # Production JSON output
+logger = get_logger(__name__)
+
+# Bind correlation ID at request start
+bind_contextvars(correlation_id="req-123", user_id="user-456")
+
+# All subsequent logs will include context automatically
+logger.info("Processing AI request", model="gpt-4", tokens=150)
+logger.info("Request completed", status_code=200, duration_ms=1200)
+```
+
+### Integration with AI Systems
+
+The logging system is specifically designed for AI/ML production requirements:
+- **Cost tracking** with built-in fields for model usage
+- **Performance monitoring** with latency and token usage
+- **Request tracing** across complex AI pipelines
+- **Error categorization** for model vs. infrastructure failures
+
 ## 📚 Learn More
 
 ### Core Methodology
@@ -126,6 +190,7 @@ Give your team a consistent, production-ready starting point that embodies engin
 ### Technologies Used
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
 - [Pydantic](https://docs.pydantic.dev/) - Data validation using type annotations
+- [structlog](https://www.structlog.org/) - Structured logging for production systems
 - [uv](https://docs.astral.sh/uv/) - Modern Python package management
 
 ## 🤝 Contributing
