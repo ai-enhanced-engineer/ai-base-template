@@ -1,6 +1,6 @@
 [project]
 name = "ai-base-template"
-version = "0.2.1"
+version = "0.3.0"
 description = "Production-first AI engineering template - Reliable infrastructure for deploying AI systems at scale"
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
