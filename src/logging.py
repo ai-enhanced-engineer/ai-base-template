@@ -4,7 +4,6 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from functools import lru_cache
 from typing import Any
 
 import structlog
@@ -41,49 +40,25 @@ class LogDefaults:
 # Immutable defaults instance
 DEFAULTS = LogDefaults()
 
-# Core log fields that should not be moved to 'extra'
-LOG_SPECIFIC_FIELDS = frozenset(
-    {
-        LogKeys.TIMESTAMP.value,
-        LogKeys.LOGGER.value,
-        LogKeys.MESSAGE.value,
-        LogKeys.CONTEXT.value,
-        LogKeys.LEVEL.value,
-    }
-)
-
 
 # ============================================================================
 # Context Operations
 # ============================================================================
 
 
-@lru_cache(maxsize=None)
 def _get_context_value(key: str, default: str) -> str:
-    """Get a value from context variables with fallback. Cached for performance."""
+    """Get a value from context variables with fallback."""
     return str(structlog.contextvars.get_contextvars().get(key, default))
 
 
 def get_correlation_id() -> str:
+    """Get current correlation ID from context."""
     return _get_context_value(LogKeys.CORRELATION_ID.value, DEFAULTS.correlation_id)
-
-
-def get_context() -> str:
-    return _get_context_value(LogKeys.CONTEXT.value, DEFAULTS.context)
 
 
 # ============================================================================
 # Log Processing (Universal)
 # ============================================================================
-
-
-def _extract_extra_fields(event_dict: EventDict) -> dict[str, Any]:
-    return {key: event_dict.pop(key) for key in list(event_dict.keys()) if key not in LOG_SPECIFIC_FIELDS}
-
-
-def _add_correlation_id_to_extra(extra_fields: dict[str, Any], correlation_id: str) -> None:
-    if correlation_id != DEFAULTS.correlation_id:
-        extra_fields[LogKeys.CORRELATION_ID.value] = correlation_id
 
 
 def _process_log_fields(_: WrappedLogger, __: str, event_dict: EventDict) -> EventDict:
@@ -92,12 +67,22 @@ def _process_log_fields(_: WrappedLogger, __: str, event_dict: EventDict) -> Eve
     event_dict[LogKeys.MESSAGE.value] = event_dict.pop("event", "")
 
     # Add context and correlation data
-    event_dict[LogKeys.CONTEXT.value] = get_context()
-    correlation_id = get_correlation_id()
+    event_dict[LogKeys.CONTEXT.value] = _get_context_value(LogKeys.CONTEXT.value, DEFAULTS.context)
+    correlation_id = _get_context_value(LogKeys.CORRELATION_ID.value, DEFAULTS.correlation_id)
 
     # Extract non-standard fields to 'extra'
-    extra_fields = _extract_extra_fields(event_dict)
-    _add_correlation_id_to_extra(extra_fields, correlation_id)
+    standard_fields = (
+        LogKeys.TIMESTAMP.value,
+        LogKeys.LOGGER.value,
+        LogKeys.MESSAGE.value,
+        LogKeys.CONTEXT.value,
+        LogKeys.LEVEL.value,
+    )
+    extra_fields = {key: event_dict.pop(key) for key in list(event_dict.keys()) if key not in standard_fields}
+
+    # Add correlation ID to extra if it's not the default
+    if correlation_id != DEFAULTS.correlation_id:
+        extra_fields[LogKeys.CORRELATION_ID.value] = correlation_id
 
     # Add extra fields if any exist
     if extra_fields:
@@ -111,76 +96,77 @@ def _process_log_fields(_: WrappedLogger, __: str, event_dict: EventDict) -> Eve
 # ============================================================================
 
 
-def _format_field_value(value: Any) -> str:
-    """Format a single field value, truncating if too long."""
-    str_value = str(value)
-    if len(str_value) > DEFAULTS.max_value_length:
-        return f"{str_value[: DEFAULTS.max_value_length - 3]}..."
-    return str_value
+class HumanReadableFormatter:
+    """Encapsulates human-readable log formatting logic for structlog processor."""
 
+    def __init__(self, defaults: LogDefaults = DEFAULTS):
+        self.defaults = defaults
 
-def _format_timestamp(timestamp_str: str) -> str:
-    """Convert ISO timestamp to HH:MM:SS format."""
-    if not timestamp_str:
-        return ""
+    def __call__(self, _: WrappedLogger, __: str, event_dict: EventDict) -> str:
+        """Format EventDict for human-readable output (structlog processor).
 
-    try:
-        # Parse ISO timestamp and format as HH:MM:SS
-        dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-        return dt.strftime("%H:%M:%S")
-    except (ValueError, AttributeError):
-        # Fallback: try to extract time portion manually
-        return timestamp_str.split("T")[1][:8] if "T" in timestamp_str else ""
+        Format: HH:MM:SS [LEVEL] logger: message [key_info] [correlation_id]
+        """
+        # Extract key components with safe defaults
+        level = event_dict.get(LogKeys.LEVEL.value, "info").upper()
+        logger_name = self.format_logger_name(event_dict.get(LogKeys.LOGGER.value, ""))
+        message = event_dict.get(LogKeys.MESSAGE.value, "")
+        timestamp = event_dict.get(LogKeys.TIMESTAMP.value, "")
+        extra = event_dict.get(LogKeys.EXTRA.value, {})
 
+        # Format components
+        time_str = self.format_timestamp(timestamp)
+        extra_str = self.format_extra_fields(extra)
+        correlation_id = extra.get(LogKeys.CORRELATION_ID.value, "")
+        corr_str = self.format_correlation_id(correlation_id)
 
-def _format_correlation_id(correlation_id: str) -> str:
-    """Format correlation ID for display, truncating to readable length."""
-    if not correlation_id:
-        return ""
-    truncated = correlation_id[: DEFAULTS.correlation_id_display_length]
-    return f" [id:{truncated}]"
+        return f"{time_str} [{level}] {logger_name}: {message}{extra_str}{corr_str}"
 
+    def format_field_value(self, value: Any) -> str:
+        """Format a single field value, truncating if too long."""
+        str_value = str(value)
+        if len(str_value) > self.defaults.max_value_length:
+            return f"{str_value[: self.defaults.max_value_length - 3]}..."
+        return str_value
 
-def _abbreviate_logger_name(logger_name: str) -> str:
-    if not logger_name.startswith("src"):
-        return logger_name
+    def format_timestamp(self, timestamp_str: str) -> str:
+        """Convert ISO timestamp to HH:MM:SS format."""
+        if not timestamp_str:
+            return ""
 
-    # Remove the src prefix and return the meaningful part
-    parts = logger_name.replace("src.", "").split(".")
+        try:
+            # Parse ISO timestamp and format as HH:MM:SS
+            dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+            return dt.strftime("%H:%M:%S")
+        except (ValueError, AttributeError):
+            # Fallback: try to extract time portion manually
+            return timestamp_str.split("T")[1][:8] if "T" in timestamp_str else ""
 
-    # Keep last 2 parts for context (e.g., "core.chat", "services.llm")
-    if len(parts) >= 2:
-        return f"{parts[-2]}.{parts[-1]}"
-    return parts[-1] if parts else logger_name
+    def format_correlation_id(self, correlation_id: str) -> str:
+        """Format correlation ID for display, truncating to readable length."""
+        if not correlation_id:
+            return ""
+        truncated = correlation_id[: self.defaults.correlation_id_display_length]
+        return f" [id:{truncated}]"
 
+    def format_logger_name(self, logger_name: str) -> str:
+        if not logger_name.startswith("src"):
+            return logger_name
 
-def _format_extra_fields(extra: dict[str, Any]) -> str:
-    if not extra:
-        return ""
+        # Remove the src prefix and return the meaningful part
+        parts = logger_name.replace("src.", "").split(".")
 
-    formatted_parts = [f"{key}={_format_field_value(value)}" for key, value in extra.items()]
-    return f" [{', '.join(formatted_parts)}]"
+        # Keep last 2 parts for context (e.g., "core.chat", "services.llm")
+        if len(parts) >= 2:
+            return f"{parts[-2]}.{parts[-1]}"
+        return parts[-1] if parts else logger_name
 
+    def format_extra_fields(self, extra: dict[str, Any]) -> str:
+        if not extra:
+            return ""
 
-def _human_readable_formatter(_: WrappedLogger, __: str, event_dict: EventDict) -> str:
-    """Simple human-readable formatter function for development/testing.
-
-    Format: HH:MM:SS [LEVEL] logger: message [key_info] [correlation_id]
-    """
-    # Extract key components with safe defaults
-    level = event_dict.get(LogKeys.LEVEL.value, "info").upper()
-    logger_name = _abbreviate_logger_name(event_dict.get(LogKeys.LOGGER.value, ""))
-    message = event_dict.get(LogKeys.MESSAGE.value, "")
-    timestamp = event_dict.get(LogKeys.TIMESTAMP.value, "")
-    extra = event_dict.get(LogKeys.EXTRA.value, {})
-
-    # Format components
-    time_str = _format_timestamp(timestamp)
-    extra_str = _format_extra_fields(extra)
-    correlation_id = extra.get(LogKeys.CORRELATION_ID.value, "")
-    corr_str = _format_correlation_id(correlation_id)
-
-    return f"{time_str} [{level}] {logger_name}: {message}{extra_str}{corr_str}"
+        formatted_parts = [f"{key}={self.format_field_value(value)}" for key, value in extra.items()]
+        return f" [{', '.join(formatted_parts)}]"
 
 
 # ============================================================================
@@ -204,7 +190,7 @@ def configure_structlog(testing: bool = False) -> None:
         structlog.contextvars.merge_contextvars,
         _process_log_fields,
         structlog.processors.TimeStamper(fmt="iso"),
-        _human_readable_formatter if testing else structlog.processors.JSONRenderer(),
+        HumanReadableFormatter() if testing else structlog.processors.JSONRenderer(),
     ]
 
     structlog.configure(
@@ -221,14 +207,12 @@ def configure_structlog(testing: bool = False) -> None:
 
 
 def clear_context_fields() -> None:
-    """Clear all context variables and cache."""
-    _get_context_value.cache_clear()  # Clear the cache
+    """Clear all context variables."""
     structlog.contextvars.clear_contextvars()
 
 
 def bind_context_vars(**kwargs: Any) -> None:
     """Bind context variables for logging."""
-    _get_context_value.cache_clear()  # Clear cache when context changes
     structlog.contextvars.bind_contextvars(**kwargs)
 
 

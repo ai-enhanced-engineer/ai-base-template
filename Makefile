@@ -1,4 +1,4 @@
-.PHONY: default help clean-project init clean-env sync format lint type-check test test-unit test-functional test-integration test-all validate-branch
+.PHONY: default help clean-project init clean-env sync format lint type-check test test-unit test-functional test-integration test-all validate-branch run
 
 GREEN_LINE=@echo "\033[0;32m--------------------------------------------------\033[0m"
 
@@ -123,5 +123,14 @@ validate-branch: ## Run formatting, linting, type checks, and tests
 	$(MAKE) type-check
 	$(MAKE) test
 	@echo "🎉 Branch validation successful - ready for PR!"
+	$(GREEN_LINE)
+
+# ----------------------------
+# Run Application
+# ----------------------------
+
+run: ## Run the main application module
+	@echo "🚀 Running main application..."
+	uv run python -m src.main
 	$(GREEN_LINE)
 
