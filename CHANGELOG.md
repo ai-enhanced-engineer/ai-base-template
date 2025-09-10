@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v0.4.0 (2025-09-10)
+
+### Features
+
+- Add production logging system + project structure improvements
+  ([#6](https://github.com/ai-enhanced-engineer/ai-base-template/pull/6),
+  [`ed20bb5`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/ed20bb5a4b9e6c1f5a50379bf7e32c9406c40f22))
+
+### Refactoring
+
+- Modernize and streamline logging system with functionality-driven tests
+  ([#6](https://github.com/ai-enhanced-engineer/ai-base-template/pull/6),
+  [`ed20bb5`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/ed20bb5a4b9e6c1f5a50379bf7e32c9406c40f22))
+
+- Modernize logging module and simplify tests
+  ([#6](https://github.com/ai-enhanced-engineer/ai-base-template/pull/6),
+  [`ed20bb5`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/ed20bb5a4b9e6c1f5a50379bf7e32c9406c40f22))
+
+- Rename ai_base_template/ to src/ and integrate formatting
+  ([#6](https://github.com/ai-enhanced-engineer/ai-base-template/pull/6),
+  [`ed20bb5`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/ed20bb5a4b9e6c1f5a50379bf7e32c9406c40f22))
+
+
 ## v0.3.0 (2025-09-02)
 
 ### Documentation
