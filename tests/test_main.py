@@ -2,7 +2,7 @@
 
 import pytest
 
-from ai_base_template.main import get_version, hello_world
+from src.main import get_version, hello_world
 
 
 def test_hello_world():
@@ -29,9 +29,10 @@ def test_hello_world_unit():
 def test_package_functionality():
     """Functional test for basic package functionality."""
     # Test that we can import and use the package
-    from ai_base_template import __version__
+    from src import __version__
+
     assert __version__ == "1.0.6"
-    
+
     # Test main functions work
     assert hello_world() == "Hello from AI Base Template!"
     assert get_version() == "1.0.6"

@@ -43,7 +43,7 @@ cd my-ai-project
 make environment-create
 ```
 
-3. Start coding! Your code goes in `ai_base_template/`
+3. Start coding! Your code goes in `src/`
 
 4. Run tests to make sure everything works:
 ```bash
@@ -54,7 +54,7 @@ make test
 
 ```
 ai-base-template/
-├── ai_base_template/      # Your Python package
+├── src/                   # Your Python package
 │   ├── __init__.py       # Package initialization
 │   └── main.py           # Example module
 ├── tests/                # Test files
@@ -93,7 +93,7 @@ make test          # Run all tests with coverage
 
 ### Adding Code
 
-1. Add your modules to `ai_base_template/`
+1. Add your modules to `src/`
 2. Write corresponding tests in `tests/`
 3. Use type hints for better code quality
 4. Run `make validate-branch` before committing
@@ -155,7 +155,7 @@ make test-integration
 
 ## Starting Your Project
 
-1. **Rename the package**: Change `ai_base_template` to your project name
+1. **Rename the package**: Change `src` to your project name
 2. **Update pyproject.toml**: Set your project name, version, and description
 3. **Clean up examples**: Remove the example code in `main.py`
 4. **Start building**: Add your own modules and logic

@@ -9,4 +9,5 @@ def hello_world() -> str:
 def get_version() -> str:
     """Get the package version."""
     from . import __version__
+
     return __version__
