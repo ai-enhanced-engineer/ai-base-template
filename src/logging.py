@@ -10,6 +10,10 @@ from typing import Any
 import structlog
 from structlog.types import EventDict, WrappedLogger
 
+# ============================================================================
+# Configuration & Constants
+# ============================================================================
+
 
 class LogKeys(str, Enum):
     """Enum for log field keys to prevent typos and improve maintainability."""
@@ -49,6 +53,11 @@ LOG_SPECIFIC_FIELDS = frozenset(
 )
 
 
+# ============================================================================
+# Context Operations
+# ============================================================================
+
+
 @lru_cache(maxsize=None)
 def _get_context_value(key: str, default: str) -> str:
     """Get a value from context variables with fallback. Cached for performance."""
@@ -56,22 +65,23 @@ def _get_context_value(key: str, default: str) -> str:
 
 
 def get_correlation_id() -> str:
-    """Get correlation ID from context with consistent default."""
     return _get_context_value(LogKeys.CORRELATION_ID.value, DEFAULTS.correlation_id)
 
 
 def get_context() -> str:
-    """Get context from context variables."""
     return _get_context_value(LogKeys.CONTEXT.value, DEFAULTS.context)
 
 
+# ============================================================================
+# Log Processing (Universal)
+# ============================================================================
+
+
 def _extract_extra_fields(event_dict: EventDict) -> dict[str, Any]:
-    """Extract fields not in LOG_SPECIFIC_FIELDS to extra dict."""
     return {key: event_dict.pop(key) for key in list(event_dict.keys()) if key not in LOG_SPECIFIC_FIELDS}
 
 
 def _add_correlation_id_to_extra(extra_fields: dict[str, Any], correlation_id: str) -> None:
-    """Add correlation_id to extra fields if it's not the default."""
     if correlation_id != DEFAULTS.correlation_id:
         extra_fields[LogKeys.CORRELATION_ID.value] = correlation_id
 
@@ -96,18 +106,9 @@ def _process_log_fields(_: WrappedLogger, __: str, event_dict: EventDict) -> Eve
     return event_dict
 
 
-def _abbreviate_logger_name(logger_name: str) -> str:
-    """Abbreviate logger names for readable output."""
-    if not logger_name.startswith("src"):
-        return logger_name
-
-    # Remove the src prefix and return the meaningful part
-    parts = logger_name.replace("src.", "").split(".")
-
-    # Keep last 2 parts for context (e.g., "core.chat", "services.llm")
-    if len(parts) >= 2:
-        return f"{parts[-2]}.{parts[-1]}"
-    return parts[-1] if parts else logger_name
+# ============================================================================
+# Human-Readable Formatting
+# ============================================================================
 
 
 def _format_field_value(value: Any) -> str:
@@ -116,15 +117,6 @@ def _format_field_value(value: Any) -> str:
     if len(str_value) > DEFAULTS.max_value_length:
         return f"{str_value[: DEFAULTS.max_value_length - 3]}..."
     return str_value
-
-
-def _format_extra_fields(extra: dict[str, Any]) -> str:
-    """Format extra fields for human-readable output."""
-    if not extra:
-        return ""
-
-    formatted_parts = [f"{key}={_format_field_value(value)}" for key, value in extra.items()]
-    return f" [{', '.join(formatted_parts)}]"
 
 
 def _format_timestamp(timestamp_str: str) -> str:
@@ -149,6 +141,27 @@ def _format_correlation_id(correlation_id: str) -> str:
     return f" [id:{truncated}]"
 
 
+def _abbreviate_logger_name(logger_name: str) -> str:
+    if not logger_name.startswith("src"):
+        return logger_name
+
+    # Remove the src prefix and return the meaningful part
+    parts = logger_name.replace("src.", "").split(".")
+
+    # Keep last 2 parts for context (e.g., "core.chat", "services.llm")
+    if len(parts) >= 2:
+        return f"{parts[-2]}.{parts[-1]}"
+    return parts[-1] if parts else logger_name
+
+
+def _format_extra_fields(extra: dict[str, Any]) -> str:
+    if not extra:
+        return ""
+
+    formatted_parts = [f"{key}={_format_field_value(value)}" for key, value in extra.items()]
+    return f" [{', '.join(formatted_parts)}]"
+
+
 def _human_readable_formatter(_: WrappedLogger, __: str, event_dict: EventDict) -> str:
     """Simple human-readable formatter function for development/testing.
 
@@ -168,6 +181,11 @@ def _human_readable_formatter(_: WrappedLogger, __: str, event_dict: EventDict) 
     corr_str = _format_correlation_id(correlation_id)
 
     return f"{time_str} [{level}] {logger_name}: {message}{extra_str}{corr_str}"
+
+
+# ============================================================================
+# Configuration
+# ============================================================================
 
 
 def configure_structlog(testing: bool = False) -> None:
@@ -197,7 +215,9 @@ def configure_structlog(testing: bool = False) -> None:
     )
 
 
-# Module-level convenience functions maintain backward compatibility
+# ============================================================================
+# Public API
+# ============================================================================
 
 
 def clear_context_fields() -> None:
@@ -213,10 +233,8 @@ def bind_context_vars(**kwargs: Any) -> None:
 
 
 def get_context_vars() -> dict[str, Any]:
-    """Get all context variables."""
     return structlog.contextvars.get_contextvars()
 
 
 def get_logger(name: str = "") -> structlog.stdlib.BoundLogger:
-    """Get a configured structlog logger."""
     return structlog.get_logger(name or __name__)  # type: ignore
