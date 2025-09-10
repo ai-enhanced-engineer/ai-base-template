@@ -1,424 +1,355 @@
 """Functional tests for the logger module."""
 
 import json
+from typing import Any
 
 import pytest
 from pytest import LogCaptureFixture, MonkeyPatch
 
-from ai_base_template.logging import (
-    bind_contextvars,
+from src.logging import (
+    bind_context_vars,
     clear_context_fields,
     configure_structlog,
-    get_correlation_id,
     get_logger,
 )
+
+# ============================================================================
+# Helpers
+# ============================================================================
+
+
+def parse_log_json(caplog: LogCaptureFixture, index: int = 0) -> dict[str, Any]:
+    try:
+        return json.loads(caplog.records[index].message)
+    except (json.JSONDecodeError, IndexError) as e:
+        records = [r.message for r in caplog.records]
+        raise AssertionError(f"Failed to parse log {index}: {e}. Records: {records}")
+
+
+def assert_json_log_structure(log_data: dict[str, Any]) -> None:
+    required_fields = {"timestamp", "level", "logger", "message", "context"}
+    missing_fields = required_fields - log_data.keys()
+    assert not missing_fields, f"Missing required fields: {missing_fields}"
+
+
+def assert_human_readable_format(log_message: str) -> None:
+    with pytest.raises((json.JSONDecodeError, ValueError)):
+        json.loads(log_message)
+
+    # Should contain basic readable components
+    assert "[" in log_message and "]" in log_message
+    assert ":" in log_message
 
 
 @pytest.fixture(autouse=True)
 def setup_logger():
-    """Configure logger before each test and clean up after."""
     configure_structlog()
     yield
     clear_context_fields()
 
 
-# Correlation ID Functionality Tests
+# ============================================================================
+# Core Functionality Tests
+# ============================================================================
 
 
-def test_correlation_id_appears_in_logged_json(caplog: LogCaptureFixture) -> None:
-    """Verify correlation_id is preserved in JSON log output for request tracing."""
-    # Bind a correlation ID as would happen at request start
-    correlation_id = "req-abc-123"
-    bind_contextvars(correlation_id=correlation_id)
+@pytest.mark.parametrize(
+    "correlation_id",
+    [
+        "simple-123",
+        "very-long-correlation-id-with-lots-of-characters-12345",
+        "req-abc-123",
+    ],
+)
+def test__correlation_id__appears_in_logs(caplog: LogCaptureFixture, correlation_id: str):
+    bind_context_vars(correlation_id=correlation_id)
 
-    # Log a message as would happen during request processing
-    logger = get_logger("api_handler")
-    logger.info("Processing request")
+    get_logger("test").info("Test message")
 
-    # Parse the JSON output
-    log_output = json.loads(caplog.records[0].message)
-
-    # Verify correlation_id is in the extra fields
-    assert "extra" in log_output
-    assert log_output["extra"]["correlation_id"] == correlation_id
-
-
-def test_get_correlation_id_returns_unknown_when_unset() -> None:
-    """Ensure get_correlation_id provides safe fallback when ID is not bound."""
-    # Don't bind any correlation_id
-    clear_context_fields()
-
-    # Should return "unknown" as default
-    assert get_correlation_id() == "unknown"
+    log_data = parse_log_json(caplog)
+    assert log_data["extra"]["correlation_id"] == correlation_id
 
 
-def test_get_correlation_id_retrieves_bound_value() -> None:
-    """Verify get_correlation_id returns the bound correlation ID."""
-    correlation_id = "test-correlation-456"
-    bind_contextvars(correlation_id=correlation_id)
+def test__correlation_id__propagates_across_loggers(caplog: LogCaptureFixture):
+    bind_context_vars(correlation_id="propagate-test")
 
-    assert get_correlation_id() == correlation_id
+    get_logger("auth").info("Auth step")
+    get_logger("db").info("DB step")
+    get_logger("api").info("Response step")
 
-
-# Log Output Structure Tests
-
-
-def test_logger_outputs_valid_json_structure(caplog: LogCaptureFixture) -> None:
-    """Ensure log output is valid JSON with required fields for log processors."""
-    logger = get_logger("test_logger")
-    logger.info("Test message", custom_field="custom_value")
-
-    # Should be valid JSON
-    log_output = json.loads(caplog.records[0].message)
-
-    # Verify required fields exist
-    assert "timestamp" in log_output
-    assert "level" in log_output
-    assert "logger" in log_output
-    assert "message" in log_output
-    assert log_output["message"] == "Test message"
-    assert log_output["logger"] == "test_logger"
-    assert log_output["level"] == "info"
+    for i in range(3):
+        log_data = parse_log_json(caplog, i)
+        assert log_data["extra"]["correlation_id"] == "propagate-test"
 
 
-def test_custom_fields_isolated_in_extra_dict(caplog: LogCaptureFixture) -> None:
-    """Verify custom fields are isolated to prevent field name collisions."""
-    logger = get_logger("api")
-
-    # Log with custom fields
-    logger.info("API call", user_id="user-123", endpoint="/api/v1/chat", method="POST", status_code=200)
-
-    log_output = json.loads(caplog.records[0].message)
-
-    # Standard fields should be at root level
-    assert "timestamp" in log_output
-    assert "level" in log_output
-    assert "message" in log_output
-    assert "logger" in log_output
-    assert "context" in log_output
-
-    # Custom fields should be in extra
-    assert "extra" in log_output
-    assert log_output["extra"]["user_id"] == "user-123"
-    assert log_output["extra"]["endpoint"] == "/api/v1/chat"
-    assert log_output["extra"]["method"] == "POST"
-    assert log_output["extra"]["status_code"] == 200
-
-    # Verify standard fields are not in extra
-    assert "timestamp" not in log_output["extra"]
-    assert "level" not in log_output["extra"]
-    assert "message" not in log_output["extra"]
-
-
-# Log Level Filtering Tests
-
-
-def test_logging_level_filters_messages(monkeypatch: MonkeyPatch, caplog: LogCaptureFixture) -> None:
-    """Verify log level setting correctly filters messages for production log control."""
-    # Set INFO level
-    monkeypatch.setenv("LOGGING_LEVEL", "INFO")
-    configure_structlog()
-
-    logger = get_logger("test")
-
-    # Log at different levels
-    logger.debug("Debug message - should not appear")
-    logger.info("Info message - should appear")
-    logger.warning("Warning message - should appear")
-    logger.error("Error message - should appear")
-
-    # Only INFO and above should be logged
-    messages = [json.loads(record.message)["message"] for record in caplog.records]
-
-    assert "Debug message - should not appear" not in messages
-    assert "Info message - should appear" in messages
-    assert "Warning message - should appear" in messages
-    assert "Error message - should appear" in messages
-
-
-def test_invalid_log_level_defaults_to_info(monkeypatch: MonkeyPatch, caplog: LogCaptureFixture) -> None:
-    """Ensure invalid log level falls back to INFO safely."""
-    # Set invalid level
-    monkeypatch.setenv("LOGGING_LEVEL", "INVALID")
-    configure_structlog()
-
-    logger = get_logger("test")
-
-    # Should still work with INFO level
-    logger.debug("Should not appear")
-    logger.info("Should appear")
-
-    messages = [json.loads(record.message)["message"] for record in caplog.records]
-    assert "Should not appear" not in messages
-    assert "Should appear" in messages
-
-
-# Context Isolation Tests
-
-
-def test_context_clears_between_requests(caplog: LogCaptureFixture) -> None:
-    """Verify context clearing prevents data leakage between requests."""
-    logger = get_logger("request_handler")
-
+def test__context__isolates_between_requests(caplog: LogCaptureFixture):
     # First request
-    bind_contextvars(correlation_id="request-1", user_id="user-1")
-    logger.info("Processing first request")
+    bind_context_vars(correlation_id="req-1", user_id="user-1")
+    get_logger("handler").info("First request")
 
-    # Clear context as would happen at request end
+    # Clear context (simulates end of request)
     clear_context_fields()
 
-    # Second request - should not have first request's context
-    bind_contextvars(correlation_id="request-2")  # Note: no user_id
-    logger.info("Processing second request")
+    # Second request
+    bind_context_vars(correlation_id="req-2")  # Note: no user_id
+    get_logger("handler").info("Second request")
 
-    # Parse both logs
-    first_log = json.loads(caplog.records[0].message)
-    second_log = json.loads(caplog.records[1].message)
+    first_log = parse_log_json(caplog, 0)
+    second_log = parse_log_json(caplog, 1)
 
-    # First log should have both fields
-    assert first_log["extra"]["correlation_id"] == "request-1"
+    assert first_log["extra"]["correlation_id"] == "req-1"
     assert first_log["extra"]["user_id"] == "user-1"
 
-    # Second log should only have correlation_id, not user_id
-    assert second_log["extra"]["correlation_id"] == "request-2"
+    assert second_log["extra"]["correlation_id"] == "req-2"
     assert "user_id" not in second_log.get("extra", {})
 
 
-def test_correlation_id_propagates_through_request_lifecycle(caplog: LogCaptureFixture) -> None:
-    """Verify correlation_id propagates through entire request without re-binding."""
-    # Bind correlation_id once at request start
-    correlation_id = "request-lifecycle-789"
-    bind_contextvars(correlation_id=correlation_id)
-
-    # Simulate multiple log points in request processing
-    logger1 = get_logger("auth")
-    logger1.info("Authenticating user")
-
-    logger2 = get_logger("database")
-    logger2.info("Querying database")
-
-    logger3 = get_logger("response")
-    logger3.info("Sending response")
-
-    # All logs should have the same correlation_id
-    for record in caplog.records:
-        log_output = json.loads(record.message)
-        assert log_output["extra"]["correlation_id"] == correlation_id
+# ============================================================================
+# Output Format Tests
+# ============================================================================
 
 
-# Critical Safety Tests for New Logging Features
+def test__custom_fields__go_to_extra_section(caplog: LogCaptureFixture):
+    get_logger("api").info("API call", user_id="user-123", endpoint="/api/chat", status_code=200)
+
+    log_data = parse_log_json(caplog)
+
+    # Standard fields at root
+    assert_json_log_structure(log_data)
+
+    # Custom fields in extra
+    extra = log_data["extra"]
+    assert extra["user_id"] == "user-123"
+    assert extra["endpoint"] == "/api/chat"
+    assert extra["status_code"] == 200
+
+    # Standard fields not in extra
+    standard_fields = {"timestamp", "level", "message", "logger", "context"}
+    assert not (standard_fields & extra.keys())
 
 
-def test_testing_mode_produces_human_readable_output(caplog: LogCaptureFixture) -> None:
-    """End-to-end test that TESTING=True actually produces human-readable logs."""
-    # Configure logger in testing mode
+@pytest.mark.parametrize(
+    "testing,should_be_json",
+    [
+        (False, True),  # Production mode = JSON
+        (True, False),  # Testing mode = Human readable
+    ],
+)
+def test__output_format__changes_based_on_testing_flag(caplog: LogCaptureFixture, testing: bool, should_be_json: bool):
+    configure_structlog(testing=testing)
+    bind_context_vars(correlation_id="format-test")
+
+    get_logger("format").info("Format test", field="value")
+
+    log_message = caplog.records[0].message
+
+    if should_be_json:
+        log_data = parse_log_json(caplog)
+        assert_json_log_structure(log_data)
+        assert log_data["extra"]["correlation_id"] == "format-test"
+    else:
+        assert_human_readable_format(log_message)
+        assert "Format test" in log_message
+        assert "field=value" in log_message
+        assert "[id:format-t]" in log_message  # Truncated correlation ID
+
+
+# Human-Readable Formatter Tests
+
+
+def test__human_readable_formatter__formats_complete_log(caplog: LogCaptureFixture):
     configure_structlog(testing=True)
+    bind_context_vars(correlation_id="complete-test-789")
 
-    # Bind context and log with extra fields
-    bind_contextvars(correlation_id="test-123-abc")
-    logger = get_logger("core.chat")
-    logger.info("Processing user query", query="How many customers?", duration_ms=150, status_code=200)
+    get_logger("services.llm").warning("LLM call completed", duration_ms=2500, model="gpt-4o-mini")
 
-    # Should get human-readable format, not JSON
-    log_output = caplog.records[0].message
+    output = caplog.records[0].message
 
-    # Verify it's NOT JSON (would raise exception if we tried to parse)
-    with pytest.raises((json.JSONDecodeError, ValueError)):
-        json.loads(log_output)
-
-    # Verify human-readable format components
-    assert "[INFO]" in log_output
-    assert "core.chat:" in log_output
-    assert "Processing user query" in log_output
-    assert "query=How many customers?" in log_output
-    assert "150ms" in log_output
-    assert "HTTP 200" in log_output
-    assert "[id:test-123]" in log_output  # Truncated correlation ID
-
-
-def test_production_mode_still_produces_json_output(caplog: LogCaptureFixture) -> None:
-    """Ensure existing JSON logging unaffected by new features."""
-    # Configure logger in production mode (default)
-    configure_structlog(testing=False)
-
-    # Bind context and log with extra fields
-    bind_contextvars(correlation_id="prod-456-def")
-    logger = get_logger("api.handler")
-    logger.info("Processing request", user_id="user-123", endpoint="/api/chat")
-
-    # Should be valid JSON
-    log_output = json.loads(caplog.records[0].message)
-
-    # Verify JSON structure matches existing format
-    assert "timestamp" in log_output
-    assert "level" in log_output
-    assert "logger" in log_output
-    assert "message" in log_output
-    assert "context" in log_output
-    assert "extra" in log_output
-
-    # Verify content
-    assert log_output["level"] == "info"
-    assert log_output["logger"] == "api.handler"
-    assert log_output["message"] == "Processing request"
-    assert log_output["extra"]["correlation_id"] == "prod-456-def"
-    assert log_output["extra"]["user_id"] == "user-123"
-    assert log_output["extra"]["endpoint"] == "/api/chat"
-
-
-def test_human_readable_renderer_formats_complete_log_entry(caplog: LogCaptureFixture) -> None:
-    """HumanReadableRenderer should format all components correctly."""
-    configure_structlog(testing=True)
-
-    # Bind correlation ID and log with full context
-    bind_contextvars(correlation_id="complete-test-789")
-    logger = get_logger("ai_sql_assistant.services.llm.session")
-    logger.warning("LLM call completed", duration_ms=2500, status_code=200, model="gpt-4o-mini")
-
-    log_output = caplog.records[0].message
-
-    # Verify format: "HH:MM:SS [LEVEL] logger: message [key_info] [correlation_id]"
-    assert "[WARNING]" in log_output
-    assert "llm.session:" in log_output  # Should be abbreviated
-    assert "LLM call completed" in log_output
-    assert "2500ms" in log_output
-    assert "HTTP 200" in log_output
-    assert "model=gpt-4o-mini" in log_output
-    assert "[id:complete]" in log_output  # Truncated to 8 chars
+    # Verify format components
+    assert "[WARNING]" in output
+    assert "services.llm:" in output
+    assert "LLM call completed" in output
+    assert "duration_ms=2500" in output
+    assert "model=gpt-4o-mini" in output
+    assert "[id:complete]" in output  # Truncated to 8 chars
 
     # Verify timestamp format (HH:MM:SS at start)
     import re
 
-    timestamp_pattern = r"^\d{2}:\d{2}:\d{2}"
-    assert re.match(timestamp_pattern, log_output)
+    assert re.match(r"^\d{2}:\d{2}:\d{2}", output)
 
 
-def test_human_readable_renderer_handles_empty_fields(caplog: LogCaptureFixture) -> None:
-    """Renderer should handle missing/empty fields gracefully."""
+# ============================================================================
+# Configuration Tests
+# ============================================================================
+
+
+def test__log_level__filters_messages(monkeypatch: MonkeyPatch, caplog: LogCaptureFixture):
+    monkeypatch.setenv("LOGGING_LEVEL", "WARNING")
+    configure_structlog()
+
+    logger = get_logger("test")
+    logger.debug("Should not appear")
+    logger.info("Should not appear")
+    logger.warning("Should appear")
+    logger.error("Should appear")
+
+    messages = [parse_log_json(caplog, i)["message"] for i in range(len(caplog.records))]
+
+    assert "Should not appear" not in " ".join(messages)
+    assert "Should appear" in " ".join(messages)
+    assert len(caplog.records) == 2  # Only WARNING and ERROR
+
+
+def test__invalid_log_level__defaults_to_info(monkeypatch: MonkeyPatch, caplog: LogCaptureFixture):
+    monkeypatch.setenv("LOGGING_LEVEL", "INVALID")
+    configure_structlog()
+
+    logger = get_logger("test")
+    logger.debug("Debug message")
+    logger.info("Info message")
+
+    # Should default to INFO level, so debug filtered out
+    assert len(caplog.records) == 1
+    log_data = parse_log_json(caplog)
+    assert log_data["message"] == "Info message"
+
+
+# ============================================================================
+# Edge Cases & Integration Tests
+# ============================================================================
+
+
+def test__edge_case_values__are_handled_correctly(caplog: LogCaptureFixture):
+    """Test that various edge case values (long, empty, special chars) are handled properly."""
     configure_structlog(testing=True)
 
-    # Log without correlation ID or extra fields
-    logger = get_logger("simple.logger")
-    logger.error("Simple error message")
+    # Test long values get truncated in human-readable format
+    very_long_value = "x" * 100
+    get_logger("test").info("Long value test", long_field=very_long_value)
+    human_output = caplog.records[0].message
+    assert "long_field=" in human_output
+    assert "..." in human_output
+    assert very_long_value not in human_output
 
-    log_output = caplog.records[0].message
+    caplog.clear()
+    configure_structlog(testing=False)  # Switch to JSON format
 
-    # Should not crash and should format basic components
-    assert "[ERROR]" in log_output
-    assert "simple.logger:" in log_output
-    assert "Simple error message" in log_output
+    # Test empty, None, zero, false values are preserved in JSON
+    get_logger("test").info("Edge case test", empty_string="", none_value=None, zero_value=0, false_value=False)
 
-    # Should not have extra brackets or correlation ID
-    assert "[id:" not in log_output
-    assert "[]" not in log_output
+    log_data = parse_log_json(caplog)
+    extra = log_data["extra"]
+    assert extra["empty_string"] == ""
+    assert extra["none_value"] is None
+    assert extra["zero_value"] == 0
+    assert extra["false_value"] is False
 
+    caplog.clear()
 
-def test_abbreviate_logger_name_shortens_project_loggers() -> None:
-    """Project logger names should be abbreviated for readability."""
-    from ai_base_template.logging import _abbreviate_logger_name
+    # Test special characters are preserved
+    special_chars = 'Test with "quotes", commas, and [brackets]'
+    get_logger("test").info("Special chars", special_field=special_chars)
 
-    # Test project logger abbreviation
-    assert _abbreviate_logger_name("ai_base_template.core.chat") == "core.chat"
-    assert _abbreviate_logger_name("ai_base_template.services.llm.session") == "llm.session"
-    assert _abbreviate_logger_name("ai_base_template.middleware.logger") == "middleware.logger"
-    assert _abbreviate_logger_name("ai_base_template.api.threads") == "api.threads"
-
-    # Test single component (should use last part)
-    assert _abbreviate_logger_name("ai_base_template.main") == "main"
-
-    # Test external loggers (should be unchanged)
-    assert _abbreviate_logger_name("werkzeug") == "werkzeug"
-    assert _abbreviate_logger_name("sqlalchemy.engine") == "sqlalchemy.engine"
-    assert _abbreviate_logger_name("litellm") == "litellm"
+    log_data = parse_log_json(caplog)
+    assert log_data["extra"]["special_field"] == special_chars
 
 
-def test_format_extra_fields_prioritizes_important_fields() -> None:
-    """Important fields like status_code, duration_ms should appear first."""
-    from ai_base_template.logging import _format_extra_fields
+def test__end_to_end_logging_workflow__maintains_context_and_formats_correctly(caplog: LogCaptureFixture):
+    """Test complete logging workflow: set context, log across services, verify output."""
+    configure_structlog(testing=False)  # JSON format for structured validation
 
-    # Test with mix of important and regular fields
-    extra = {
-        "user_id": "user-123",
-        "status_code": 200,
-        "request_type": "chat",
-        "duration_ms": 1500,
-        "endpoint": "/api/v1/chat",
-        "response_size_bytes": 2048,
-    }
+    # Simulate request start - set context
+    bind_context_vars(correlation_id="req-123", user_id="user-456", request_path="/api/users")
 
-    result = _format_extra_fields(extra)
+    # Simulate logging across different services in a request
+    auth_logger = get_logger("src.auth.service")
+    auth_logger.info("User authentication started", method="jwt")
 
-    # Should start with brackets
-    assert result.startswith(" [")
-    assert result.endswith("]")
+    db_logger = get_logger("src.database.users")
+    db_logger.info("Database query executed", table="users", query_time_ms=45)
 
-    # Important fields should appear first in specific format
-    content = result[2:-1]  # Remove " [" and "]"
-    fields = [f.strip() for f in content.split(",")]
+    api_logger = get_logger("src.api.response")
+    api_logger.warning("Rate limit approaching", current_requests=950, limit=1000)
 
-    # Check that important fields are formatted specially and appear early
-    important_fields_found = []
-    for field in fields[:4]:  # Check first 4 fields
-        if "HTTP" in field:
-            important_fields_found.append("status_code")
-        elif "ms" in field and "=" not in field:  # Duration without "=" means special format
-            important_fields_found.append("duration_ms")
-        elif "B" in field and "=" not in field:  # Bytes without "=" means special format
-            important_fields_found.append("response_size_bytes")
+    # Verify all logs have correct context and structure
+    assert len(caplog.records) == 3
 
-    # At least status_code and duration_ms should be in special format
-    assert "status_code" in important_fields_found
-    assert "duration_ms" in important_fields_found
+    for i, (service, expected_message) in enumerate(
+        [
+            ("auth.service", "User authentication started"),
+            ("database.users", "Database query executed"),
+            ("api.response", "Rate limit approaching"),
+        ]
+    ):
+        log_data = parse_log_json(caplog, i)
 
-    # Regular fields should have key=value format
-    assert any("user_id=user-123" in field for field in fields)
+        # Verify required structure
+        assert log_data["message"] == expected_message
+        assert log_data["level"] in ["info", "warning"]
+        assert log_data["context"] == "default"
+        assert service in log_data["logger"]
 
+        # Verify context propagation
+        extra = log_data["extra"]
+        assert extra["correlation_id"] == "req-123"
+        assert extra["user_id"] == "user-456"
+        assert extra["request_path"] == "/api/users"
 
-def test_correlation_id_works_in_human_readable_mode(caplog: LogCaptureFixture) -> None:
-    """Correlation IDs should work in human-readable format."""
-    configure_structlog(testing=True)
+    # Verify service-specific fields are preserved
+    auth_log = parse_log_json(caplog, 0)
+    assert auth_log["extra"]["method"] == "jwt"
 
-    # Test with long correlation ID (should be truncated)
-    long_correlation_id = "very-long-correlation-id-that-should-be-truncated-123456789"
-    bind_contextvars(correlation_id=long_correlation_id)
+    db_log = parse_log_json(caplog, 1)
+    assert db_log["extra"]["table"] == "users"
+    assert db_log["extra"]["query_time_ms"] == 45
 
-    logger = get_logger("correlation.test")
-    logger.info("Test correlation ID display")
-
-    log_output = caplog.records[0].message
-
-    # Should appear as truncated correlation ID
-    assert "[id:very-lon]" in log_output  # First 8 characters
-
-    # Should not contain the full correlation ID
-    assert long_correlation_id not in log_output
-
-    # Test with shorter correlation ID
-    clear_context_fields()
-    bind_contextvars(correlation_id="short")
-    logger.info("Test short correlation ID")
-
-    log_output = caplog.records[1].message
-    assert "[id:short]" in log_output
+    rate_log = parse_log_json(caplog, 2)
+    assert rate_log["extra"]["current_requests"] == 950
+    assert rate_log["extra"]["limit"] == 1000
 
 
-def test_configure_structlog_chooses_correct_renderer() -> None:
-    """configure_structlog should choose renderer based on testing flag."""
-    import structlog
-
-    # Test production mode - should use JSONRenderer
+def test__concurrent_requests__maintain_isolated_contexts(caplog: LogCaptureFixture):
+    """Test that context isolation works correctly when simulating concurrent requests."""
     configure_structlog(testing=False)
-    config = structlog.get_config()
 
-    # Check that JSONRenderer is in processors
-    renderer_types = [type(processor).__name__ for processor in config["processors"]]
-    assert "JSONRenderer" in renderer_types
-    assert "HumanReadableRenderer" not in renderer_types
+    # Simulate first request context
+    bind_context_vars(correlation_id="req-001", session_id="sess-abc", feature="checkout")
+    get_logger("src.checkout").info("Checkout process started")
 
-    # Test testing mode - should use HumanReadableRenderer
-    configure_structlog(testing=True)
-    config = structlog.get_config()
+    # Simulate second request context (different context)
+    clear_context_fields()  # Simulate end of first request
+    bind_context_vars(correlation_id="req-002", session_id="sess-xyz", feature="search")
+    get_logger("src.search").info("Search query processed")
 
-    renderer_types = [type(processor).__name__ for processor in config["processors"]]
-    assert "HumanReadableRenderer" in renderer_types
-    assert "JSONRenderer" not in renderer_types
+    # Simulate third request context
+    clear_context_fields()
+    bind_context_vars(correlation_id="req-003", user_type="premium", feature="analytics")
+    get_logger("src.analytics").info("Analytics event recorded")
+
+    # Verify each log has only its own context
+    assert len(caplog.records) == 3
+
+    # First request log
+    checkout_log = parse_log_json(caplog, 0)
+    checkout_extra = checkout_log["extra"]
+    assert checkout_extra["correlation_id"] == "req-001"
+    assert checkout_extra["session_id"] == "sess-abc"
+    assert checkout_extra["feature"] == "checkout"
+    assert "user_type" not in checkout_extra  # Should not leak from later request
+
+    # Second request log
+    search_log = parse_log_json(caplog, 1)
+    search_extra = search_log["extra"]
+    assert search_extra["correlation_id"] == "req-002"
+    assert search_extra["session_id"] == "sess-xyz"
+    assert search_extra["feature"] == "search"
+    assert "user_type" not in search_extra  # Should not leak from later request
+
+    # Third request log
+    analytics_log = parse_log_json(caplog, 2)
+    analytics_extra = analytics_log["extra"]
+    assert analytics_extra["correlation_id"] == "req-003"
+    assert analytics_extra["user_type"] == "premium"
+    assert analytics_extra["feature"] == "analytics"
+    assert "session_id" not in analytics_extra  # Should not leak from previous requests

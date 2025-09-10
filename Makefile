@@ -1,8 +1,8 @@
-.PHONY: default help clean-project init clean-env sync format lint type-check test test-unit test-functional test-integration test-all validate-branch
+.PHONY: default help clean-project init clean-env sync format lint type-check test test-unit test-functional test-integration test-all validate-branch run
 
 GREEN_LINE=@echo "\033[0;32m--------------------------------------------------\033[0m"
 
-SOURCE_DIR = ai_base_template/
+SOURCE_DIR = src/
 TEST_DIR = tests/
 PROJECT_VERSION := $(shell awk '/^\[project\]/ {flag=1; next} /^\[/{flag=0} flag && /^version/ {gsub(/"/, "", $$2); print $$2}' pyproject.toml)
 PYTHON_VERSION := 3.12
@@ -97,7 +97,7 @@ test-integration: ## Run integration tests with pytest
 test: ## Run standard tests with coverage report (excludes integration)
 	@echo "Running tests with pytest..."
 	uv run python -m pytest -m "not integration" -vv -s $(TEST_DIR) \
-		--cov=ai_base_template \
+		--cov=src \
 		--cov-config=pyproject.toml \
 		--cov-fail-under=80 \
 		--cov-report=term-missing
@@ -106,7 +106,7 @@ test: ## Run standard tests with coverage report (excludes integration)
 test-all: ## Run all tests including integration tests
 	@echo "Running ALL tests with pytest..."
 	uv run python -m pytest -vv -s $(TEST_DIR) \
-		--cov=ai_base_template \
+		--cov=src \
 		--cov-config=pyproject.toml \
 		--cov-fail-under=80 \
 		--cov-report=term-missing
@@ -123,5 +123,14 @@ validate-branch: ## Run formatting, linting, type checks, and tests
 	$(MAKE) type-check
 	$(MAKE) test
 	@echo "🎉 Branch validation successful - ready for PR!"
+	$(GREEN_LINE)
+
+# ----------------------------
+# Run Application
+# ----------------------------
+
+run: ## Run the main application module
+	@echo "🚀 Running main application..."
+	uv run python -m src.main
 	$(GREEN_LINE)
 

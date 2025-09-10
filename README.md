@@ -92,7 +92,7 @@ make test-all          # Complete test suite
 
 ```
 ai-base-template/
-├── ai_base_template/      # Your service code goes here
+├── src/                   # Your service code goes here
 │   ├── __init__.py       
 │   ├── main.py           # Simple starting point with logging integration
 │   └── logging.py        # Production structured logging system
@@ -123,17 +123,17 @@ This template includes a **production-grade structured logging system** built wi
 
 ### Dual-Mode Logging
 
-**Development Mode** - Human-readable format for debugging:
+**Development Mode** - Human-readable format optimized for local debugging:
 ```bash
-22:45:00 [INFO] main: Processing request [HTTP 200, 150ms, user_id=user-123] [id:req-abc12]
+22:45:00 [INFO] api.handlers: Processing request [status_code=200, duration_ms=150, user_id=user-123] [id:req-abc1]
 ```
 
-**Production Mode** - Structured JSON for monitoring systems:
+**Production Mode** - Structured JSON for monitoring and analytics:
 ```json
 {
   "timestamp": "2025-08-31T22:45:00.123Z",
   "level": "info", 
-  "logger": "main",
+  "logger": "src.api.handlers",
   "message": "Processing request",
   "context": "default",
   "extra": {
@@ -145,38 +145,17 @@ This template includes a **production-grade structured logging system** built wi
 }
 ```
 
-### Built-in Features
+### Key Capabilities
 
-- **Correlation ID Tracking** - Trace requests across your entire system
-- **Context Isolation** - Prevent data leakage between concurrent requests
-- **Smart Field Organization** - Important fields (status_code, duration_ms) formatted for readability
-- **Environment-Driven Configuration** - `LOGGING_LEVEL` and `LITELLM_LOG_LEVEL` support
-- **Logger Name Abbreviation** - Clean, readable logger names in development
+- **Correlation ID Tracking** - Automatically trace requests across your entire system
+- **Context Isolation** - Prevent data leakage between concurrent requests and operations  
+- **Smart Field Organization** - Separates standard fields from custom data for optimal readability
+- **Environment-Driven Configuration** - Dynamic log levels and format switching via environment variables
+- **Edge Case Handling** - Graceful handling of long values, special characters, and null data
 
 ### Usage Example
 
-```python
-from ai_base_template.logging import configure_structlog, get_logger, bind_contextvars
-
-# Configure for your environment
-configure_structlog(testing=False)  # Production JSON output
-logger = get_logger(__name__)
-
-# Bind correlation ID at request start
-bind_contextvars(correlation_id="req-123", user_id="user-456")
-
-# All subsequent logs will include context automatically
-logger.info("Processing AI request", model="gpt-4", tokens=150)
-logger.info("Request completed", status_code=200, duration_ms=1200)
-```
-
-### Integration with AI Systems
-
-The logging system is specifically designed for AI/ML production requirements:
-- **Cost tracking** with built-in fields for model usage
-- **Performance monitoring** with latency and token usage
-- **Request tracing** across complex AI pipelines
-- **Error categorization** for model vs. infrastructure failures
+See `src/main.py` for a complete demonstration of the logging system in action, including context binding, multi-function logging, and both development and production formatting modes.
 
 ## 📚 Learn More
 
