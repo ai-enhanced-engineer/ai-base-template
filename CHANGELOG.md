@@ -2,6 +2,35 @@
 
 <!-- version list -->
 
+## v0.3.0 (2025-09-02)
+
+### Documentation
+
+- Showcase production logging system in README
+  ([#5](https://github.com/ai-enhanced-engineer/ai-base-template/pull/5),
+  [`75ab7ad`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/75ab7ad3fa027447c2b360fece807fac2d737141))
+
+- Transform README to production-first pedagogical approach
+  ([#5](https://github.com/ai-enhanced-engineer/ai-base-template/pull/5),
+  [`75ab7ad`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/75ab7ad3fa027447c2b360fece807fac2d737141))
+
+- Transform README to production-first pedagogical approach
+  ([#4](https://github.com/ai-enhanced-engineer/ai-base-template/pull/4),
+  [`7f109e7`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/7f109e7ba6a968d7b67caed39f58d0a6c3fdf83e))
+
+### Features
+
+- Add structured logging and integrate formatting into CI/CD
+  ([#5](https://github.com/ai-enhanced-engineer/ai-base-template/pull/5),
+  [`75ab7ad`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/75ab7ad3fa027447c2b360fece807fac2d737141))
+
+### Refactoring
+
+- Improve import organization and remove redundant docstrings
+  ([#5](https://github.com/ai-enhanced-engineer/ai-base-template/pull/5),
+  [`75ab7ad`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/75ab7ad3fa027447c2b360fece807fac2d737141))
+
+
 ## v0.2.1 (2025-08-21)
 
 ### Bug Fixes

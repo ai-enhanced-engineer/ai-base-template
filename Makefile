@@ -39,6 +39,11 @@ init: ## Set up Python version, venv, and install dependencies
 	fi
 	@echo "🎉 Environment setup complete!"
 
+sync: ## Sync project dependencies
+	@echo "Syncing project dependencies..."
+	uv sync --extra dev
+	$(GREEN_LINE)
+
 clean-project: ## Clean Python caches and tooling artifacts
 	@echo "Cleaning project caches..."
 	find . -type d \( -name '.pytest_cache' -o -name '.ruff_cache' -o -name '.mypy_cache' -o -name '__pycache__' \) -exec rm -rf {} +
@@ -49,10 +54,7 @@ clean-env: ## Remove the virtual environment folder
 	rm -rf .venv
 	$(GREEN_LINE)
 
-sync: ## Sync project dependencies
-	@echo "Syncing project dependencies..."
-	uv sync --extra dev
-	$(GREEN_LINE)
+
 
 # ----------------------------
 # Code Quality
