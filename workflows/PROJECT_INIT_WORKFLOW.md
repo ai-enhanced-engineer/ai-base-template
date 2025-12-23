@@ -228,7 +228,7 @@ Select implementation agent based on project type:
 1. Implement one deliverable (feature/module) from PROJECT_PLAN.md
 2. Write unit tests following naming convention: `test__<what>__<expected>`
 3. Ensure tests are behavioral (test outcomes, not mocks)
-4. Run `make test` locally to verify tests pass
+4. Run `just test` locally to verify tests pass
 5. Mark deliverable as "Ready for Review"
 
 **Test Requirements**:
@@ -284,7 +284,7 @@ Select implementation agent based on project type:
 1. Address each blocking issue from remediation list
 2. Add missing tests if required
 3. Fix tautological tests to be behavioral
-4. Re-run `make test` locally
+4. Re-run `just test` locally
 5. Return to 3.2 for re-review
 
 **Loop Control**:
@@ -361,7 +361,7 @@ If a deliverable fails review 3 times:
 
 **Success Criteria**:
 - All deliverables pass review
-- `make validate-branch` passes
+- `just validate-branch` passes
 - Coverage >= 80% for new code
 
 ### [APPROVAL GATE 3]
@@ -403,7 +403,7 @@ Phase 4 follows the same **Implement → Review → Fix** loop as Phase 3 for ea
    - `test__<what>__<expected>` naming
    - 80% coverage for new code
    - Behavioral tests (not tautological)
-4. Run `make test` locally
+4. Run `just test` locally
 5. Mark feature as "Ready for Review"
 
 ---
@@ -441,7 +441,7 @@ After review passes, user validates:
 
 **Success Criteria**:
 - Each feature passes review loop
-- `make validate-branch` passes
+- `just validate-branch` passes
 - Coverage maintained >= 80%
 
 ---

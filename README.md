@@ -2,7 +2,7 @@
 
 > Describe what you want to build. Let agents build it.
 
-Autonomous multi-agent Python project template. *Part of [Bot Brewers](https://github.com/bot-brewers).*
+Autonomous multi-agent Python project template.
 
 ## Why This Template?
 
@@ -59,7 +59,7 @@ Autonomous multi-agent Python project template. *Part of [Bot Brewers](https://g
 ## Quick Start
 
 1. **Create your repository**: Click "Use this template" on GitHub
-2. **Set up environment**: `make init`
+2. **Set up environment**: `just init`
 3. **Fill out your seeds**: Edit `context/PRODUCT.md` and `context/ENGINEERING.md`
 4. **Start brewing**: In Claude Code, say `"Run the project initialization workflow"`
 
@@ -94,7 +94,7 @@ Beyond the autonomous workflow, this template provides a **production-ready foun
 ### Development Automation
 - Pre-configured linting (Ruff), formatting (Black), type checking (mypy)
 - Pre-commit hooks for quality gates
-- `make validate-branch` runs all checks
+- `just validate-branch` runs all checks
 
 ### Testing Patterns
 - Unit, functional, and integration test structure
@@ -128,30 +128,32 @@ my-project/
 │   └── test_logging.py        # 21+ logging tests
 ├── research/                  # Notebooks and experiments
 ├── ADR.md                     # Architecture decisions (generated)
-├── Makefile                   # All automation commands
+├── justfile                   # All automation commands
 └── pyproject.toml             # Project configuration
 ```
 
 ## Development Commands
 
 ```bash
+just                   # Show all available commands
+
 # Environment
-make init              # Complete development setup
-make sync              # Update dependencies
-make clean-env         # Reset environment
+just init              # Complete development setup
+just sync              # Update dependencies
+just clean-env         # Reset environment
 
 # Code Quality
-make format            # Auto-format code
-make lint              # Fix linting issues
-make type-check        # Validate type hints
-make validate-branch   # Run all checks (required before commits)
+just format            # Auto-format code
+just lint              # Fix linting issues
+just type-check        # Validate type hints
+just validate-branch   # Run all checks (required before commits)
 
 # Testing
-make test              # Standard test suite
-make test-unit         # Fast unit tests
-make test-functional   # Feature tests
-make test-integration  # Integration tests
-make test-all          # Complete test suite
+just test              # Standard test suite
+just test-unit         # Fast unit tests
+just test-functional   # Feature tests
+just test-integration  # Integration tests
+just test-all          # Complete test suite
 ```
 
 ## The Production-First Philosophy

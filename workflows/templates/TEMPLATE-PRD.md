@@ -184,7 +184,7 @@ Example:
 - [ ] 80% of user stories marked "Must-Have" are implemented and tested
 - [ ] End-to-end workflow (research → synthesis → decision) completes without errors
 - [ ] Documentation coverage > 90% (all public APIs documented)
-- [ ] `make validate-branch` passes (all tests, type checks, linting)
+- [ ] `just validate-branch` passes (all tests, type checks, linting)
 
 ---
 

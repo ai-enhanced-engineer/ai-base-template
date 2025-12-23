@@ -162,15 +162,15 @@ Example:
 - [ ] Unit tests for core functionality (>70% coverage)
 - [ ] Integration tests for end-to-end flows
 - [ ] Documentation updated (README, API docs)
-- [ ] `make validate-branch` passes
+- [ ] `just validate-branch` passes
 
 ### Success Criteria
 
 - [ ] End-to-end user workflow completes without errors
 - [ ] All acceptance criteria met for Must-Have features
-- [ ] Test suite passes (`make test`)
-- [ ] Type checking passes (`make type-check`)
-- [ ] Linting passes (`make lint`)
+- [ ] Test suite passes (`just test`)
+- [ ] Type checking passes (`just type-check`)
+- [ ] Linting passes (`just lint`)
 - [ ] User validates MVP functionality
 
 ### Dependencies
@@ -241,7 +241,7 @@ Example:
 - [ ] Tests added and passing
 - [ ] Documentation updated
 - [ ] No regression in existing functionality
-- [ ] `make validate-branch` passes
+- [ ] `just validate-branch` passes
 
 ### Dependencies
 
