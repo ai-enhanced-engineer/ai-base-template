@@ -2,6 +2,21 @@
 
 <!-- version list -->
 
+## v0.5.0 (2026-01-09)
+
+### Chores
+
+- Defer workflow seed files for later introduction
+  ([#7](https://github.com/ai-enhanced-engineer/ai-base-template/pull/7),
+  [`0c01b3f`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/0c01b3f95c9f28635b9cd41ae31ee3e34b906a83))
+
+### Features
+
+- Migrate from Makefile to justfile
+  ([#7](https://github.com/ai-enhanced-engineer/ai-base-template/pull/7),
+  [`0c01b3f`](https://github.com/ai-enhanced-engineer/ai-base-template/commit/0c01b3f95c9f28635b9cd41ae31ee3e34b906a83))
+
+
 ## v0.4.0 (2025-09-10)
 
 ### Features
