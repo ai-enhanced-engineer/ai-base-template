@@ -1,192 +1,211 @@
-# AI Base Template: Production-First AI Engineering
+# Python Agentic Template
 
-> Based on [A Production-First Approach to AI Engineering](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai) - a methodology for building reliable AI systems.
+> Describe what you want to build. Let agents build it.
 
-## 🎯 Why This Template?
+Autonomous multi-agent Python project template.
 
-**The Problem:** Most AI projects fail when moving from prototype to production. Research notebooks that work brilliantly in development fail catastrophically under real-world conditions—latency spikes, cost spirals, non-deterministic failures, and maintenance nightmares.
+## Why This Template?
 
-**The Root Cause:** The AI industry focuses 90% on model development and 10% on the infrastructure needed for production. This ratio should be reversed. Production AI systems require engineering discipline, not just algorithmic innovation.
+**The Problem:** Starting AI/ML projects requires extensive setup—architecture decisions, project structure, testing patterns, CI/CD, logging, and more. Most developers copy-paste from old projects or spend days configuring from scratch.
 
-**The Solution:** This template provides a production-ready foundation for AI projects, embodying the principle that *"Research optimizes for possibility. Engineering optimizes for reliability."*
+**The Solution:** This template **bootstraps itself** into a complete, production-ready project through a multi-agent workflow. You describe your project in plain language; agents research, plan, and build it.
 
-## 🏗️ What This Template Provides
+## How It Works
 
-A **modern Python foundation** designed for AI systems that need to work reliably in production:
-
-- **Modern Python Tooling** - Python 3.12+, FastAPI, Pydantic, type hints throughout
-- **Production Logging** - Structured JSON logging with correlation tracking and dual-mode rendering
-- **Development Automation** - Pre-configured linting, formatting, testing, and validation
-- **Production-Ready Structure** - Organized for maintainability and scaling
-- **Comprehensive Testing** - Unit, functional, and integration test patterns (21+ logging tests included)
-- **CI/CD Ready** - GitHub Actions, pre-commit hooks, semantic versioning
-- **Documentation Standards** - Clear guides for development and deployment
-
-This isn't another ML experiment template—it's an engineering foundation for AI systems that need to work reliably at scale.
-
-## ⚡ Quick Start
-
-```bash
-# Clone the production-ready foundation
-git clone <repository-url> my-ai-service
-cd my-ai-service
-
-# Set up the complete development environment
-make init
-
-# Verify everything works
-make validate-branch
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  YOU: Fill context/PRODUCT.md + context/ENGINEERING.md         │
+│       (Describe what you're building and technical preferences) │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 0: Agent Discovery                                       │
+│           Claude Code finds available specialists and maps      │
+│           them to roles (research, architecture, implementation,│
+│           review)                                               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 1: Research                                              │
+│           Expands your seeds into full PRD                      │
+│           Researches best practices, grades evidence            │
+│           → context/PRD.md, context/RESEARCH_SYNTHESIS.md       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ [User Approval]
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 2: Architecture                                          │
+│           Creates ADRs and project plan                         │
+│           Defines MVP scope with MoSCoW prioritization          │
+│           → ADR.md, context/PROJECT_PLAN.md                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ [User Approval]
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 3: MVP Implementation                                    │
+│           Builds must-have features with tests                  │
+│           Per deliverable: IMPLEMENT → REVIEW → FIX → PASS      │
+│           Review enforces 80% coverage, test quality            │
+│           → Working code in src/                                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ [User Approval]
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 4: Feature Enhancement                                   │
+│           Adds features from roadmap (same validation loop)     │
+│           Each feature: IMPLEMENT → REVIEW → FIX → User Approval│
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-You now have a production-ready Python service foundation. Add your AI logic on top of this reliable base.
+**Human-in-the-loop**: You approve each phase before continuing. No runaway automation.
 
-## 🔧 The Production-First Philosophy
+## Quick Start
 
-### Research vs. Production Mindset
+1. **Create your repository**: Click "Use this template" on GitHub
+2. **Set up environment**: `just init`
+3. **Fill out your seeds**: Edit `context/PRODUCT.md` and `context/ENGINEERING.md`
+4. **Start brewing**: In Claude Code, say `"Run the project initialization workflow"`
 
-**Research Approach:**
-- Optimize for accuracy and novel algorithms
-- Success = high F1 scores, paper publications
-- Acceptable to fail fast and iterate
-- Focus on the happy path
+### Filling Out Seeds
 
-**Production-First Approach:**
-- Optimize for reliability and maintainability
-- Success = uptime, cost efficiency, user satisfaction
-- Must handle edge cases gracefully
-- Plan for failure from the start
+| File | What to Include |
+|------|-----------------|
+| `context/PRODUCT.md` | What you're building, for whom, why, success criteria |
+| `context/ENGINEERING.md` | Technical preferences, constraints, architecture ideas |
 
-### The 90/10 Rule
+**Tips for better results**:
+- Be specific about the problem: "Users waste 2 hours/day on X" > "Users have problems"
+- Define success measurably: "50% reduction in Y" > "Improve Y"
+- State constraints clearly: "Must run on GCP" > "Cloud deployment"
 
-In production AI systems:
-- **10%** of your code is the actual AI/ML logic
-- **90%** is infrastructure: validation, monitoring, error handling, cost controls, testing
+See `workflows/PROJECT_INIT_WORKFLOW.md` for the complete workflow specification.
 
-This template provides that crucial 90% foundation.
+## What You Get
 
-## 🛠️ Development Workflow
+Beyond the autonomous workflow, this template provides a **production-ready foundation**:
 
-### Essential Commands
+### Modern Python Tooling
+- Python 3.12+, FastAPI, Pydantic
+- Type hints throughout
+- uv for fast dependency management
+
+### Production Logging
+- Structured JSON logging with structlog
+- Correlation ID tracking across requests
+- Dual-mode: human-readable (dev) / JSON (prod)
+
+### Development Automation
+- Pre-configured linting (Ruff), formatting (Black), type checking (mypy)
+- Pre-commit hooks for quality gates
+- `just validate-branch` runs all checks
+
+### Testing Patterns
+- Unit, functional, and integration test structure
+- pytest with markers for test organization
+- 21+ logging system tests included as examples
+
+### CI/CD Ready
+- GitHub Actions workflows
+- Semantic versioning
+- Docker-ready structure
+
+## Project Structure
+
+```
+my-project/
+├── context/                   # Project seeds + workflow outputs
+│   ├── PRODUCT.md             # Your product requirements (seed)
+│   ├── ENGINEERING.md         # Your technical preferences (seed)
+│   ├── PRD.md                 # Expanded PRD (generated)
+│   ├── RESEARCH_SYNTHESIS.md  # Research findings (generated)
+│   └── PROJECT_PLAN.md        # MVP scope + roadmap (generated)
+├── workflows/                 # Autonomous workflow system
+│   ├── PROJECT_INIT_WORKFLOW.md  # Complete workflow specification
+│   └── templates/             # Output format contracts
+├── src/                       # Your service code
+│   ├── __init__.py
+│   ├── main.py                # Entry point with logging demo
+│   └── logging.py             # Production logging system
+├── tests/                     # Test suite
+│   ├── test_main.py
+│   └── test_logging.py        # 21+ logging tests
+├── research/                  # Notebooks and experiments
+├── ADR.md                     # Architecture decisions (generated)
+├── justfile                   # All automation commands
+└── pyproject.toml             # Project configuration
+```
+
+## Development Commands
 
 ```bash
-# Environment management
-make init              # Complete development setup
-make sync              # Update dependencies  
-make clean-env         # Reset environment
+just                   # Show all available commands
 
-# Code quality
-make format            # Auto-format code
-make lint              # Fix linting issues
-make type-check        # Validate type hints
-make validate-branch   # Run all checks before committing
+# Environment
+just init              # Complete development setup
+just sync              # Update dependencies
+just clean-env         # Reset environment
+
+# Code Quality
+just format            # Auto-format code
+just lint              # Fix linting issues
+just type-check        # Validate type hints
+just validate-branch   # Run all checks (required before commits)
 
 # Testing
-make test              # Standard test suite
-make test-unit         # Fast unit tests
-make test-functional   # Feature tests
-make test-integration  # Integration tests
-make test-all          # Complete test suite
+just test              # Standard test suite
+just test-unit         # Fast unit tests
+just test-functional   # Feature tests
+just test-integration  # Integration tests
+just test-all          # Complete test suite
 ```
 
-### Project Structure
+## The Production-First Philosophy
 
-```
-ai-base-template/
-├── src/                   # Your service code goes here
-│   ├── __init__.py       
-│   ├── main.py           # Simple starting point with logging integration
-│   └── logging.py        # Production structured logging system
-├── tests/                # Comprehensive test suite
-│   ├── test_main.py      # Example test patterns
-│   └── test_logging.py   # 21+ logging system tests
-├── research/             # Notebooks and experiments
-│   └── EDA.ipynb        # Exploratory work stays here
-├── Makefile             # All automation commands
-├── pyproject.toml       # Modern Python configuration
-└── CLAUDE.md            # Detailed development guide
-```
+This template embodies the principle that **production AI requires engineering discipline**:
 
-## 🎓 Who Should Use This Template
+- **90% infrastructure, 10% model code**: Most production AI is validation, monitoring, error handling, and cost controls—not algorithms
+- **Reliability over novelty**: Production systems must work consistently, not just impressively
+- **Plan for failure**: Every external call needs error handling; every assumption needs validation
+
+The autonomous workflow ensures these patterns are built in from the start, not bolted on later.
+
+## Who Should Use This
+
+### Teams Starting AI/ML Projects
+Stop reinventing infrastructure. Describe your project and let agents build a production-ready foundation.
 
 ### Senior Engineers New to AI
-Start with a solid engineering foundation while learning AI concepts. The template provides the safety rails you're accustomed to in production systems.
-
-### AI Engineers Moving to Production
-Stop reinventing infrastructure. Focus on your models while using battle-tested patterns for the production wrapper.
+Get the safety rails you're accustomed to in production systems while learning AI concepts.
 
 ### Technical Leaders
-Give your team a consistent, production-ready starting point that embodies engineering best practices from day one.
+Give your team a consistent, production-ready starting point that embodies engineering best practices.
 
-## 📊 Production Logging System
+## Learn More
 
-This template includes a **production-grade structured logging system** built with structlog that handles the observability requirements of real-world AI systems.
-
-### Dual-Mode Logging
-
-**Development Mode** - Human-readable format optimized for local debugging:
-```bash
-22:45:00 [INFO] api.handlers: Processing request [status_code=200, duration_ms=150, user_id=user-123] [id:req-abc1]
-```
-
-**Production Mode** - Structured JSON for monitoring and analytics:
-```json
-{
-  "timestamp": "2025-08-31T22:45:00.123Z",
-  "level": "info", 
-  "logger": "src.api.handlers",
-  "message": "Processing request",
-  "context": "default",
-  "extra": {
-    "status_code": 200,
-    "duration_ms": 150,
-    "user_id": "user-123",
-    "correlation_id": "req-abc-123"
-  }
-}
-```
-
-### Key Capabilities
-
-- **Correlation ID Tracking** - Automatically trace requests across your entire system
-- **Context Isolation** - Prevent data leakage between concurrent requests and operations  
-- **Smart Field Organization** - Separates standard fields from custom data for optimal readability
-- **Environment-Driven Configuration** - Dynamic log levels and format switching via environment variables
-- **Edge Case Handling** - Graceful handling of long values, special characters, and null data
-
-### Usage Example
-
-See `src/main.py` for a complete demonstration of the logging system in action, including context binding, multi-function logging, and both development and production formatting modes.
-
-## 📚 Learn More
-
-### Core Methodology
-- [A Production-First Approach to AI Engineering](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai) - The article that inspired this template
+### This Template
+- `workflows/PROJECT_INIT_WORKFLOW.md` - Complete workflow specification
+- `workflows/templates/` - Output format examples
 
 ### Production AI Engineering
-- [Google's Rules for ML](https://developers.google.com/machine-learning/guides/rules-of-ml) - Engineering discipline for ML systems
-- [Hidden Technical Debt in ML Systems](https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems.pdf) - Foundational NIPS paper
+- [A Production-First Approach to AI Engineering](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai)
+- [Google's Rules for ML](https://developers.google.com/machine-learning/guides/rules-of-ml)
+- [Hidden Technical Debt in ML Systems](https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems.pdf)
 
-### Technologies Used
+### Technologies
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
-- [Pydantic](https://docs.pydantic.dev/) - Data validation using type annotations
-- [structlog](https://www.structlog.org/) - Structured logging for production systems
-- [uv](https://docs.astral.sh/uv/) - Modern Python package management
+- [Pydantic](https://docs.pydantic.dev/) - Data validation
+- [structlog](https://www.structlog.org/) - Structured logging
+- [uv](https://docs.astral.sh/uv/) - Fast Python package management
 
-## 🤝 Contributing
+## Contributing
 
-This template embodies battle-tested patterns from production AI systems. When contributing, prioritize:
-
+When contributing, prioritize:
 1. **Reliability over features**
 2. **Simplicity over cleverness**
 3. **Documentation over assumptions**
 4. **Tests over trust**
 
-## 📄 License
+## License
 
-Apache License 2.0 - See [LICENSE](LICENSE) file for details.
+Apache License 2.0 - See [LICENSE](LICENSE) file.
 
 ---
 
-**Remember:** The hardest part of AI isn't the algorithms—it's making them work reliably in production. This template gives you a head start on that challenge.
-
-*"The best AI is the AI that works."*
+*"Describe what you want. Let agents build it."*

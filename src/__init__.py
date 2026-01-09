@@ -1,3 +1,3 @@
-"""AI Flora Mind - Python AI Package"""
+"""Python Agentic Template - Autonomous multi-agent Python project template"""
 
-__version__ = "0.3.0"
+__version__ = "0.1.0"

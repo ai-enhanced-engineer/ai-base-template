@@ -268,3 +268,8 @@ TODO.md
 notes.md
 scratch/
 .serena/
+
+# Workflow files (introduce later)
+workflows/PROJECT_INIT_WORKFLOW.md
+context/PRODUCT.md
+context/ENGINEERING.md
