@@ -1,135 +1,117 @@
-# Python Agentic Template
+# Autonomous Python Template
 
 > Describe what you want to build. Let agents build it.
 
-Autonomous multi-agent Python project template.
-
-## Why This Template?
-
-**The Problem:** Starting AI/ML projects requires extensive setup—architecture decisions, project structure, testing patterns, CI/CD, logging, and more. Most developers copy-paste from old projects or spend days configuring from scratch.
-
-**The Solution:** This template **bootstraps itself** into a complete, production-ready project through a multi-agent workflow. You describe your project in plain language; agents research, plan, and build it.
-
-## How It Works
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  YOU: Fill context/PRODUCT.md + context/ENGINEERING.md         │
-│       (Describe what you're building and technical preferences) │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  PHASE 0: Agent Discovery                                       │
-│           Claude Code finds available specialists and maps      │
-│           them to roles (research, architecture, implementation,│
-│           review)                                               │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  PHASE 1: Research                                              │
-│           Expands your seeds into full PRD                      │
-│           Researches best practices, grades evidence            │
-│           → context/PRD.md, context/RESEARCH_SYNTHESIS.md       │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ [User Approval]
-┌─────────────────────────────────────────────────────────────────┐
-│  PHASE 2: Architecture                                          │
-│           Creates ADRs and project plan                         │
-│           Defines MVP scope with MoSCoW prioritization          │
-│           → ADR.md, context/PROJECT_PLAN.md                     │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ [User Approval]
-┌─────────────────────────────────────────────────────────────────┐
-│  PHASE 3: MVP Implementation                                    │
-│           Builds must-have features with tests                  │
-│           Per deliverable: IMPLEMENT → REVIEW → FIX → PASS      │
-│           Review enforces 80% coverage, test quality            │
-│           → Working code in src/                                │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ [User Approval]
-┌─────────────────────────────────────────────────────────────────┐
-│  PHASE 4: Feature Enhancement                                   │
-│           Adds features from roadmap (same validation loop)     │
-│           Each feature: IMPLEMENT → REVIEW → FIX → User Approval│
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Human-in-the-loop**: You approve each phase before continuing. No runaway automation.
+A self-building Python ML/Data Science template powered by Claude Code. Clone, describe your project, and watch it come to life.
 
 ## Quick Start
 
-1. **Create your repository**: Click "Use this template" on GitHub
-2. **Set up environment**: `just init`
-3. **Fill out your seeds**: Edit `context/PRODUCT.md` and `context/ENGINEERING.md`
-4. **Start brewing**: In Claude Code, say `"Run the project initialization workflow"`
+### 1. Clone this template
 
-### Filling Out Seeds
+```bash
+git clone https://github.com/ai-enhanced-engineer/aut-python-template.git my-project
+cd my-project
+```
 
-| File | What to Include |
-|------|-----------------|
-| `context/PRODUCT.md` | What you're building, for whom, why, success criteria |
-| `context/ENGINEERING.md` | Technical preferences, constraints, architecture ideas |
+### 2. Set up environment
 
-**Tips for better results**:
-- Be specific about the problem: "Users waste 2 hours/day on X" > "Users have problems"
-- Define success measurably: "50% reduction in Y" > "Improve Y"
-- State constraints clearly: "Must run on GCP" > "Cloud deployment"
+```bash
+just init
+```
 
-See `workflows/PROJECT_INIT_WORKFLOW.md` for the complete workflow specification.
+### 3. Start Claude Code
 
-## What You Get
+```bash
+claude
+```
 
-Beyond the autonomous workflow, this template provides a **production-ready foundation**:
+### 4. Describe your project
 
-### Modern Python Tooling
-- Python 3.12+, FastAPI, Pydantic
-- Type hints throughout
-- uv for fast dependency management
+```
+> I want to build a RAG system for legal documents
+```
+
+That's it. Describe what you want; agents help you build it.
+
+## Example Session
+
+```
+You: I want to build a fraud detection API
+
+Claude: I'll help you build a fraud detection API. Let me understand your requirements:
+        - What data sources will you use? (transactions, user behavior, etc.)
+        - Any specific ML approach preference? (rule-based, XGBoost, neural network)
+        - What's your target latency for predictions?
+
+You: Transaction data from a PostgreSQL database. XGBoost for now, we can upgrade later.
+     Need sub-100ms latency.
+
+Claude: Great, let me set up the project structure:
+        1. Creating data pipeline for PostgreSQL ingestion
+        2. Setting up XGBoost model with feature engineering
+        3. Building FastAPI endpoint with async handlers
+        4. Adding monitoring and logging
+
+        [Creates files, writes tests, validates...]
+
+You: Add a batch prediction endpoint too
+
+Claude: Adding batch prediction endpoint with:
+        - CSV upload support
+        - Background processing with status tracking
+        - Results stored in PostgreSQL
+
+        [Implements, tests, validates...]
+```
+
+## What's Included
+
+This template comes with production-ready infrastructure:
 
 ### Production Logging
-- Structured JSON logging with structlog
+
+- Structured JSON logging with [structlog](https://www.structlog.org/)
 - Correlation ID tracking across requests
 - Dual-mode: human-readable (dev) / JSON (prod)
 
-### Development Automation
-- Pre-configured linting (Ruff), formatting (Black), type checking (mypy)
+### Testing Infrastructure
+
+- pytest with markers (unit, functional, integration)
+- 80% coverage requirement
 - Pre-commit hooks for quality gates
-- `just validate-branch` runs all checks
 
-### Testing Patterns
-- Unit, functional, and integration test structure
-- pytest with markers for test organization
-- 21+ logging system tests included as examples
+### CI/CD Pipeline
 
-### CI/CD Ready
 - GitHub Actions workflows
-- Semantic versioning
-- Docker-ready structure
+- Semantic versioning with auto-release
+- Format → Lint → Type-check → Test pipeline
+
+### Modern Python Tooling
+
+- Python 3.12+
+- Type hints throughout
+- Pydantic for data validation
+- uv for fast dependency management
+- Ruff + Black for formatting/linting
+- mypy (strict mode) for type checking
 
 ## Project Structure
 
 ```
 my-project/
-├── context/                   # Project seeds + workflow outputs
-│   ├── PRODUCT.md             # Your product requirements (seed)
-│   ├── ENGINEERING.md         # Your technical preferences (seed)
-│   ├── PRD.md                 # Expanded PRD (generated)
-│   ├── RESEARCH_SYNTHESIS.md  # Research findings (generated)
-│   └── PROJECT_PLAN.md        # MVP scope + roadmap (generated)
-├── workflows/                 # Autonomous workflow system
-│   ├── PROJECT_INIT_WORKFLOW.md  # Complete workflow specification
-│   └── templates/             # Output format contracts
-├── src/                       # Your service code
+├── src/                       # Python source code
 │   ├── __init__.py
-│   ├── main.py                # Entry point with logging demo
 │   └── logging.py             # Production logging system
 ├── tests/                     # Test suite
-│   ├── test_main.py
-│   └── test_logging.py        # 21+ logging tests
-├── research/                  # Notebooks and experiments
-├── ADR.md                     # Architecture decisions (generated)
-├── justfile                   # All automation commands
-└── pyproject.toml             # Project configuration
+│   └── test_logging.py        # 21+ logging tests as examples
+├── .claude/                   # Claude Code settings
+├── .github/workflows/         # CI/CD pipelines
+│   └── ci.yml
+├── CLAUDE.md                  # Development standards
+├── pyproject.toml             # Project configuration
+├── justfile                   # Automation commands
+├── ADR.md                     # Architecture decisions
+└── .pre-commit-config.yaml    # Git hooks
 ```
 
 ## Development Commands
@@ -164,31 +146,30 @@ This template embodies the principle that **production AI requires engineering d
 - **Reliability over novelty**: Production systems must work consistently, not just impressively
 - **Plan for failure**: Every external call needs error handling; every assumption needs validation
 
-The autonomous workflow ensures these patterns are built in from the start, not bolted on later.
-
 ## Who Should Use This
 
-### Teams Starting AI/ML Projects
-Stop reinventing infrastructure. Describe your project and let agents build a production-ready foundation.
+### Teams Starting ML/Data Projects
 
-### Senior Engineers New to AI
-Get the safety rails you're accustomed to in production systems while learning AI concepts.
+Stop reinventing infrastructure. Describe your project and get a production-ready foundation.
+
+### Senior Engineers New to ML
+
+Get the safety rails you're accustomed to in production systems while learning ML concepts.
 
 ### Technical Leaders
+
 Give your team a consistent, production-ready starting point that embodies engineering best practices.
 
 ## Learn More
 
-### This Template
-- `workflows/PROJECT_INIT_WORKFLOW.md` - Complete workflow specification
-- `workflows/templates/` - Output format examples
-
 ### Production AI Engineering
+
 - [A Production-First Approach to AI Engineering](https://aienhancedengineer.substack.com/p/a-production-first-approach-to-ai)
 - [Google's Rules for ML](https://developers.google.com/machine-learning/guides/rules-of-ml)
 - [Hidden Technical Debt in ML Systems](https://papers.nips.cc/paper/5656-hidden-technical-debt-in-machine-learning-systems.pdf)
 
 ### Technologies
+
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
 - [Pydantic](https://docs.pydantic.dev/) - Data validation
 - [structlog](https://www.structlog.org/) - Structured logging
@@ -197,6 +178,7 @@ Give your team a consistent, production-ready starting point that embodies engin
 ## Contributing
 
 When contributing, prioritize:
+
 1. **Reliability over features**
 2. **Simplicity over cleverness**
 3. **Documentation over assumptions**
