@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v0.6.0 (2026-01-14)
+
+### Features
+
+- Rebrand to autonomous python template
+  ([#8](https://github.com/ai-enhanced-engineer/aut-python-template/pull/8),
+  [`95f24e9`](https://github.com/ai-enhanced-engineer/aut-python-template/commit/95f24e98421019838cb3c85a0f53d6fb8090b6b4))
+
+
 ## v0.5.0 (2026-01-09)
 
 ### Chores
