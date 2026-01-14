@@ -1,7 +1,10 @@
 [project]
-name = "python-agentic-template"
+# TODO: Change to your project name
+name = "aut-python-template"
 version = "0.5.0"
-description = "Autonomous multi-agent Python project template - Describe what you want, let agents build it"
+# TODO: Update project description
+description = "Autonomous Python ML/Data Science template - Describe your project, let agents build it"
+# TODO: Update author information
 authors = [{name="Leopoldo Garcia Vargas", email="lk13.dev@gmail.com"}]
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
